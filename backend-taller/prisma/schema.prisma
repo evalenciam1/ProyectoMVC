@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id Int @id @default(autoincrement())
+  nombre String
+  email String @unique
+  password String
+  rol String //admin,mecanico,recepcion
+  createdAt DateTime @default(now())
+}
+
+model Cliente {
+  id          Int        @id @default(autoincrement())
+  nombre      String
+  telefono    String
+  email       String     
+  direccion   String
+  createdAt   DateTime   @default(now())
+
+    vehiculos       Vehiculo[]
+  ordenesTrabajo  OrdenTrabajo[]
+}
+
+model Vehiculo {
+  id          Int        @id @default(autoincrement())
+  marca       String
+  modelo      String
+  anio        Int
+  placa       String     
+  color       String
+  clienteId   Int
+  createdAt   DateTime   @default(now())
+
+  cliente     Cliente   @relation(fields: [clienteId], references: [id])
+  ordenes     OrdenTrabajo[]
+}
+
+model OrdenTrabajo {
+  id          Int      @id @default(autoincrement())
+  fecha       DateTime @default(now())
+  descripcion String
+  estado      String   // ej: "pendiente", "en proceso", "completado"
+  clienteId   Int
+  vehiculoId  Int
+
+  vehiculo    Vehiculo  @relation(fields: [vehiculoId], references: [id])
+  cliente     Cliente   @relation(fields: [clienteId], references: [id])
+  detalles    DetalleOrdenTrabajo[]
+}
+
+model DetalleOrdenTrabajo {
+  id              Int           @id @default(autoincrement())
+  descripcion     String
+  cantidad        Int
+  precioUnitario  Float
+  ordenTrabajoId  Int
+
+  ordenTrabajo   OrdenTrabajo  @relation(fields: [ordenTrabajoId], references: [id])
+}
+
