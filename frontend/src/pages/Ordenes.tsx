@@ -32,15 +32,13 @@ export default function Ordenes() {
     loadOrdenes();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
-  
-    const parsedValue = ['anio', 'clienteId'].includes(name)
+    const parsedValue = ['vehiculoId', 'clienteId'].includes(name)
       ? Number(value)
       : value;
-  
     setForm({ ...form, [name]: parsedValue });
-  };
+  };  
 
   const handleSubmit = async () => {
     const method = form.id ? 'put' : 'post';

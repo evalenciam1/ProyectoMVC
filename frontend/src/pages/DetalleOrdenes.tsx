@@ -53,16 +53,17 @@ export default function DetalleOrdenes() {
     loadDetalles();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-
     const numericFields = ['ordenTrabajoId', 'cantidad', 'precioUnitario', 'clienteId'];
-
     setForm({
       ...form,
       [name]: numericFields.includes(name) ? Number(value) : value,
     });
   };
+  
 
   const handleSubmit = async () => {
     if (form.id) {
