@@ -53,7 +53,7 @@ export default function Clientes() {
 
     try {
       if (isEditing) {
-        console.log(data);
+    //    console.log(data);
         await api.put(`/clientes/${form.id}`, clientesData);
       } else {
         await api.post('/clientes', clientesData);
