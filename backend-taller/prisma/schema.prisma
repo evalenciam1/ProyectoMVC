@@ -14,60 +14,141 @@ datasource db {
 }
 
 model Usuario {
-  id Int @id @default(autoincrement())
-  nombre String
-  email String @unique
-  password String
-  rol String //admin,mecanico,recepcion
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  email     String   @unique
+  password  String
+  rol       String   // admin, mecanico, recepcion
   createdAt DateTime @default(now())
 }
 
 model Cliente {
-  id          Int        @id @default(autoincrement())
-  nombre      String
-  telefono    String
-  email       String     
-  direccion   String
-  createdAt   DateTime   @default(now())
+  id             Int             @id @default(autoincrement())
+  nombre         String
+  telefono       String
+  email          String
+  direccion      String
+  createdAt      DateTime        @default(now())
 
-    vehiculos       Vehiculo[]
-  ordenesTrabajo  OrdenTrabajo[]
+  vehiculos      Vehiculo[]
 }
 
 model Vehiculo {
-  id          Int        @id @default(autoincrement())
+  id          Int             @id @default(autoincrement())
   marca       String
   modelo      String
   anio        Int
-  placa       String     
+  placa       String          @unique
   color       String
   clienteId   Int
-  createdAt   DateTime   @default(now())
+  createdAt   DateTime        @default(now())
 
-  cliente     Cliente   @relation(fields: [clienteId], references: [id])
+  cliente     Cliente         @relation(fields: [clienteId], references: [id])
   ordenes     OrdenTrabajo[]
 }
 
 model OrdenTrabajo {
-  id          Int      @id @default(autoincrement())
-  fecha       DateTime @default(now())
-  descripcion String
-  estado      String   // ej: "pendiente", "en proceso", "completado"
-  clienteId   Int
-  vehiculoId  Int
+  id               Int                  @id @default(autoincrement())
+  fecha            DateTime             @default(now())
+  fechaSalida      DateTime?
+  descripcion      String
+  estado           String               // pendiente, en proceso, completado
+  vehiculoId       Int
 
-  vehiculo    Vehiculo  @relation(fields: [vehiculoId], references: [id])
-  cliente     Cliente   @relation(fields: [clienteId], references: [id])
-  detalles    DetalleOrdenTrabajo[]
+  vehiculo         Vehiculo             @relation(fields: [vehiculoId], references: [id])
+  detalles         DetalleOrdenTrabajo[]
+  repuestos        OrdenRepuesto[]
+  factura          Factura?
+  detalleFacturas  DetalleFactura[]
+}
+
+model Puesto {
+  id           Int         @id @default(autoincrement())
+  nombre       String
+  departamento String
+  descripcion  String?
+
+  empleados    Empleado[]
+}
+
+model Empleado {
+  id         Int                    @id @default(autoincrement())
+  nombre     String
+  telefono   String?
+  cargo      String
+  salario    Decimal               @db.Decimal(10,2)
+  puestoId   Int
+
+  puesto     Puesto                @relation(fields: [puestoId], references: [id])
+  servicios  DetalleOrdenTrabajo[]
 }
 
 model DetalleOrdenTrabajo {
   id              Int           @id @default(autoincrement())
+  ordenTrabajoId  Int
+  empleadoId      Int?
   descripcion     String
   cantidad        Int
-  precioUnitario  Float
-  ordenTrabajoId  Int
+  precioUnitario  Decimal       @db.Decimal(10,2)
+  costoUnitario   Decimal       @db.Decimal(10,2)
 
-  ordenTrabajo   OrdenTrabajo  @relation(fields: [ordenTrabajoId], references: [id])
+  ordenTrabajo    OrdenTrabajo  @relation(fields: [ordenTrabajoId], references: [id])
+  empleado        Empleado?     @relation(fields: [empleadoId], references: [id])
 }
 
+model Repuesto {
+  id               Int             @id @default(autoincrement())
+  descripcion      String
+  codigoReferencia String
+  precioVenta      Decimal         @db.Decimal(10,2)
+  costo            Decimal         @db.Decimal(10,2)
+
+  ordenes          OrdenRepuesto[]
+}
+
+model OrdenRepuesto {
+  id             Int             @id @default(autoincrement())
+  ordenId        Int
+  repuestoId     Int
+  cantidad       Int             @default(1)
+  precioUnitario Decimal         @db.Decimal(10,2)
+  costoUnitario  Decimal         @db.Decimal(10,2)
+
+  orden          OrdenTrabajo    @relation(fields: [ordenId], references: [id])
+  repuesto       Repuesto        @relation(fields: [repuestoId], references: [id])
+}
+
+model Factura {
+  id           Int               @id @default(autoincrement())
+  ordenId      Int              @unique
+  fechaEmision DateTime
+  descuento    Decimal           @db.Decimal(10,2)
+  estado       String
+  total        Decimal           @db.Decimal(10,2)
+
+  orden        OrdenTrabajo      @relation(fields: [ordenId], references: [id])
+  detalles     DetalleFactura[]
+}
+
+model Pago {
+  id         Int                @id @default(autoincrement())
+  monto      Decimal            @db.Decimal(10,2)
+  fechaPago  DateTime
+  metodoPago String
+
+  detalles   DetalleFactura[]
+}
+
+model DetalleFactura {
+  id             Int             @id @default(autoincrement())
+  facturaId      Int
+  pagoId         Int?
+  ordenId        Int
+  cantidad       Int
+  precioUnitario Decimal         @db.Decimal(10,2)
+  subtotal       Decimal         @db.Decimal(10,2)
+
+  factura        Factura         @relation(fields: [facturaId], references: [id])
+  pago           Pago?           @relation(fields: [pagoId], references: [id])
+  orden          OrdenTrabajo    @relation(fields: [ordenId], references: [id])
+}
