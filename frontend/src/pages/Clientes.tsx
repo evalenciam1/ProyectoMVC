@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/api';
 import { Button, Modal, Table, Form } from 'react-bootstrap';
-import { data } from 'react-router-dom';
 import { cleanData } from '../utils/cleanData';
 
 interface Cliente {
