@@ -23,28 +23,28 @@ model Usuario {
 }
 
 model Cliente {
-  id             Int             @id @default(autoincrement())
-  nombre         String
-  telefono       String
-  email          String
-  direccion      String
-  createdAt      DateTime        @default(now())
+  id        Int        @id @default(autoincrement())
+  nombre    String
+  telefono  String
+  email     String
+  direccion String
+  createdAt DateTime   @default(now())
 
-  vehiculos      Vehiculo[]
+  vehiculos Vehiculo[]
 }
 
 model Vehiculo {
-  id          Int             @id @default(autoincrement())
-  marca       String
-  modelo      String
-  anio        Int
-  placa       String          @unique
-  color       String
-  clienteId   Int
-  createdAt   DateTime        @default(now())
+  id         Int           @id @default(autoincrement())
+  marca      String
+  modelo     String
+  anio       Int
+  placa      String        @unique
+  color      String
+  clienteId  Int
+  createdAt  DateTime      @default(now())
 
-  cliente     Cliente         @relation(fields: [clienteId], references: [id])
-  ordenes     OrdenTrabajo[]
+  cliente    Cliente       @relation(fields: [clienteId], references: [id])
+  ordenes    OrdenTrabajo[]
 }
 
 model OrdenTrabajo {
@@ -52,14 +52,26 @@ model OrdenTrabajo {
   fecha            DateTime             @default(now())
   fechaSalida      DateTime?
   descripcion      String
-  estado           String               // pendiente, en proceso, completado
+  estado           String
   vehiculoId       Int
+  facturaId        Int?
 
   vehiculo         Vehiculo             @relation(fields: [vehiculoId], references: [id])
+  factura          Factura?             @relation(fields: [facturaId], references: [id])
   detalles         DetalleOrdenTrabajo[]
   repuestos        OrdenRepuesto[]
-  factura          Factura?
   detalleFacturas  DetalleFactura[]
+}
+
+model OrdenRepuesto {
+  id             Int             @id @default(autoincrement())
+  ordenId        Int
+  descripcion    String
+  cantidad       Int             @default(1)
+  precioUnitario Decimal         @db.Decimal(10,2)
+  costoUnitario  Decimal         @db.Decimal(10,2)
+
+  orden          OrdenTrabajo    @relation(fields: [ordenId], references: [id])
 }
 
 model Puesto {
@@ -96,37 +108,16 @@ model DetalleOrdenTrabajo {
   empleado        Empleado?     @relation(fields: [empleadoId], references: [id])
 }
 
-model Repuesto {
-  id               Int             @id @default(autoincrement())
-  descripcion      String
-  codigoReferencia String
-  precioVenta      Decimal         @db.Decimal(10,2)
-  costo            Decimal         @db.Decimal(10,2)
-
-  ordenes          OrdenRepuesto[]
-}
-
-model OrdenRepuesto {
-  id             Int             @id @default(autoincrement())
-  ordenId        Int
-  repuestoId     Int
-  cantidad       Int             @default(1)
-  precioUnitario Decimal         @db.Decimal(10,2)
-  costoUnitario  Decimal         @db.Decimal(10,2)
-
-  orden          OrdenTrabajo    @relation(fields: [ordenId], references: [id])
-  repuesto       Repuesto        @relation(fields: [repuestoId], references: [id])
-}
-
 model Factura {
   id           Int               @id @default(autoincrement())
-  ordenId      Int              @unique
+  pagoId       Int?
   fechaEmision DateTime
   descuento    Decimal           @db.Decimal(10,2)
   estado       String
   total        Decimal           @db.Decimal(10,2)
 
-  orden        OrdenTrabajo      @relation(fields: [ordenId], references: [id])
+  pago         Pago?             @relation(fields: [pagoId], references: [id])
+  ordenes      OrdenTrabajo[]
   detalles     DetalleFactura[]
 }
 
@@ -136,6 +127,7 @@ model Pago {
   fechaPago  DateTime
   metodoPago String
 
+  factura    Factura[]
   detalles   DetalleFactura[]
 }
 
