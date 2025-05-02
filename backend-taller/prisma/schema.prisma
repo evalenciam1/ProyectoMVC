@@ -102,7 +102,7 @@ model DetalleOrdenTrabajo {
   descripcion     String
   cantidad        Int
   precioUnitario  Decimal       @db.Decimal(10,2)
-  costoUnitario   Decimal       @db.Decimal(10,2)
+  costoUnitario   Decimal?      @db.Decimal(10,2)
 
   ordenTrabajo    OrdenTrabajo  @relation(fields: [ordenTrabajoId], references: [id])
   empleado        Empleado?     @relation(fields: [empleadoId], references: [id])

@@ -1,21 +1,31 @@
 import { Router } from 'express';
 import {
-  crearDetalleOrden,
-  obtenerDetallesOrden,
+  obtenerDetalles,
   obtenerDetallePorId,
-  actualizarDetalleOrden,
-  eliminarDetalleOrden,
-  obtenerDetallesPorOrdenTrabajo,
+  obtenerDetallesPorOrden,
+  crearDetalle,
+  actualizarDetalle,
+  eliminarDetalle,
 } from '../controllers/detalleOrdenTrabajo.controller';
 
 const router = Router();
 
-router.post('/', crearDetalleOrden);
-router.get('/', obtenerDetallesOrden);
-router.get('/:id', obtenerDetallePorId);
-router.get('/orden/:ordenTrabajoId', obtenerDetallesPorOrdenTrabajo);
-router.put('/:id', actualizarDetalleOrden);
-router.delete('/:id', eliminarDetalleOrden);
+// Obtener todos los detalles
+router.get('/', obtenerDetalles);
 
+// Obtener detalles por ID de orden de trabajo
+router.get('/orden/:ordenTrabajoId', obtenerDetallesPorOrden);
+
+// Obtener detalle por ID único
+router.get('/:id', obtenerDetallePorId);
+
+// Crear nuevo detalle
+router.post('/', crearDetalle);
+
+// Actualizar detalle
+router.put('/:id', actualizarDetalle);
+
+// Eliminar detalle
+router.delete('/:id', eliminarDetalle);
 
 export default router;

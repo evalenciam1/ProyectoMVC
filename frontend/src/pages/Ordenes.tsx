@@ -94,7 +94,8 @@ export default function Ordenes() {
               <td>{o.estado}</td>
               <td>{o.descripcion}</td>
               <td>
-                <Button size="sm" variant="info"  onClick={() => navigate(`/detalles/${o.id}`)}>Ver Detalles</Button>{' '}
+                <Button size="sm" variant="info"  onClick={() => navigate(`/detalles/${o.id}`)}>Servicios</Button>{' '}
+                <Button size="sm" variant="info"  onClick={() => navigate(`/repuestos/${o.id}`)}>Repuestos</Button>{' '}
                 <Button size="sm" variant="success" onClick={() => handleEdit(o)}>Editar</Button>{' '}
                 <Button size="sm" variant="danger" onClick={() => handleDelete(o.id!)}>Eliminar</Button>
               </td>
