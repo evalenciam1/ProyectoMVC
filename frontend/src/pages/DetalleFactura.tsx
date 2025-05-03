@@ -9,6 +9,7 @@ interface DetalleFactura {
   pagoId?: number | null;
   ordenId: number;
   cantidad: number;
+  descripcion: string;
   precioUnitario: number;
   subtotal: number;
 }
@@ -21,6 +22,7 @@ export default function DetalleFacturaPage() {
     pagoId: null,
     ordenId: 1,
     cantidad: 1,
+    descripcion: '',
     precioUnitario: 0,
     subtotal: 0,
   });
@@ -40,9 +42,10 @@ export default function DetalleFacturaPage() {
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
-    const parsed = ['facturaId', 'pagoId', 'ordenId', 'cantidad'].includes(name)
-      ? Number(value)
-      : parseFloat(value);
+    const parsed =
+      ['facturaId', 'pagoId', 'ordenId', 'cantidad', 'precioUnitario'].includes(name)
+        ? Number(value)
+        : value;
     setForm(prev => ({ ...prev, [name]: parsed }));
   };
 
@@ -63,6 +66,7 @@ export default function DetalleFacturaPage() {
       pagoId: null,
       ordenId: 1,
       cantidad: 1,
+      descripcion: '',
       precioUnitario: 0,
       subtotal: 0,
     });
@@ -91,6 +95,7 @@ export default function DetalleFacturaPage() {
             <th>ID</th>
             <th>Orden ID</th>
             <th>Cantidad</th>
+            <th>Descripción</th>
             <th>Precio Unitario</th>
             <th>Subtotal</th>
             <th>Acciones</th>
@@ -102,6 +107,7 @@ export default function DetalleFacturaPage() {
               <td>{d.id}</td>
               <td>{d.ordenId}</td>
               <td>{d.cantidad}</td>
+              <td>{d.descripcion}</td>
               <td>Q{Number(d.precioUnitario).toFixed(2)}</td>
               <td>Q{Number(d.subtotal).toFixed(2)}</td>
               <td>
@@ -126,6 +132,10 @@ export default function DetalleFacturaPage() {
             <Form.Group>
               <Form.Label>Cantidad</Form.Label>
               <Form.Control name="cantidad" type="number" value={form.cantidad} onChange={handleChange} />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Descripción</Form.Label>
+              <Form.Control name="descripcion" type="text" value={form.descripcion} onChange={handleChange} />
             </Form.Group>
             <Form.Group>
               <Form.Label>Precio Unitario</Form.Label>
