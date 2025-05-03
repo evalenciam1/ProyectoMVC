@@ -137,6 +137,7 @@ model DetalleFactura {
   pagoId         Int?
   ordenId        Int
   cantidad       Int
+  descripcion    String
   precioUnitario Decimal         @db.Decimal(10,2)
   subtotal       Decimal         @db.Decimal(10,2)
 
