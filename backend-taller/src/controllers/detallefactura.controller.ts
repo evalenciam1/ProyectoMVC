@@ -3,7 +3,15 @@ import { prisma } from '../config/prisma';
 
 // Crear detalle de factura
 export const crearDetalleFactura = async (req: Request, res: Response) => {
-  const { facturaId, pagoId, ordenId, cantidad, precioUnitario, subtotal } = req.body;
+  const {
+    facturaId,
+    pagoId,
+    ordenId,
+    cantidad,
+    descripcion,
+    precioUnitario,
+    subtotal,
+  } = req.body;
 
   try {
     const detalle = await prisma.detalleFactura.create({
@@ -12,6 +20,7 @@ export const crearDetalleFactura = async (req: Request, res: Response) => {
         pagoId: pagoId ? Number(pagoId) : null,
         ordenId: Number(ordenId),
         cantidad: Number(cantidad),
+        descripcion: descripcion.trim(), // asegúrate de que sea string no vacío
         precioUnitario: parseFloat(precioUnitario),
         subtotal: parseFloat(subtotal),
       },
@@ -64,7 +73,15 @@ export const obtenerDetalleFacturaPorId = async (req: Request, res: Response) =>
 // Actualizar detalle de factura
 export const actualizarDetalleFactura = async (req: Request, res: Response) => {
   const id = Number(req.params.id);
-  const { facturaId, pagoId, ordenId, cantidad, precioUnitario, subtotal } = req.body;
+  const {
+    facturaId,
+    pagoId,
+    ordenId,
+    cantidad,
+    descripcion,
+    precioUnitario,
+    subtotal,
+  } = req.body;
 
   try {
     const detalle = await prisma.detalleFactura.update({
@@ -74,6 +91,7 @@ export const actualizarDetalleFactura = async (req: Request, res: Response) => {
         pagoId: pagoId ? Number(pagoId) : null,
         ordenId: Number(ordenId),
         cantidad: Number(cantidad),
+        descripcion: descripcion.trim(),
         precioUnitario: parseFloat(precioUnitario),
         subtotal: parseFloat(subtotal),
       },
