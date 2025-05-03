@@ -9,6 +9,8 @@ import detalleOrdenTrabajoRouter from './routes/detalleOrdenTrabajo.routes';
 import OrdenRepuesto  from './routes/ordenRepuesto.routes';
 import puestoRouter from './routes/puesto.routes';
 import empleadoRoutes from './routes/empleado.routes';
+import facturaRouter from './routes/factura.routes'; // ✅ Importar correctamente
+import detalleFacturaRouter from './routes/detallefactura.routes'; // ✅ Importar correctamente
 
 dotenv.config();
 
@@ -30,5 +32,7 @@ app.use('/api/detalles-orden', detalleOrdenTrabajoRouter);
 app.use('/api/repuestos', OrdenRepuesto);
 app.use('/api/puestos', puestoRouter);
 app.use('/api/empleados', empleadoRoutes);
+app.use('/api/facturas', facturaRouter);
+app.use('/api/detalle-factura', detalleFacturaRouter);
 
 export default app;
