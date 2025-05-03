@@ -46,6 +46,19 @@ CREATE TABLE `OrdenTrabajo` (
     `descripcion` VARCHAR(191) NOT NULL,
     `estado` VARCHAR(191) NOT NULL,
     `vehiculoId` INTEGER NOT NULL,
+    `facturaId` INTEGER NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `OrdenRepuesto` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `ordenId` INTEGER NOT NULL,
+    `descripcion` VARCHAR(191) NOT NULL,
+    `cantidad` INTEGER NOT NULL DEFAULT 1,
+    `precioUnitario` DECIMAL(10, 2) NOT NULL,
+    `costoUnitario` DECIMAL(10, 2) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -86,38 +99,14 @@ CREATE TABLE `DetalleOrdenTrabajo` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Repuesto` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `descripcion` VARCHAR(191) NOT NULL,
-    `codigoReferencia` VARCHAR(191) NOT NULL,
-    `precioVenta` DECIMAL(10, 2) NOT NULL,
-    `costo` DECIMAL(10, 2) NOT NULL,
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `OrdenRepuesto` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `ordenId` INTEGER NOT NULL,
-    `repuestoId` INTEGER NOT NULL,
-    `cantidad` INTEGER NOT NULL DEFAULT 1,
-    `precioUnitario` DECIMAL(10, 2) NOT NULL,
-    `costoUnitario` DECIMAL(10, 2) NOT NULL,
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `Factura` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `ordenId` INTEGER NOT NULL,
+    `pagoId` INTEGER NULL,
     `fechaEmision` DATETIME(3) NOT NULL,
     `descuento` DECIMAL(10, 2) NOT NULL,
     `estado` VARCHAR(191) NOT NULL,
     `total` DECIMAL(10, 2) NOT NULL,
 
-    UNIQUE INDEX `Factura_ordenId_key`(`ordenId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -151,6 +140,12 @@ ALTER TABLE `Vehiculo` ADD CONSTRAINT `Vehiculo_clienteId_fkey` FOREIGN KEY (`cl
 ALTER TABLE `OrdenTrabajo` ADD CONSTRAINT `OrdenTrabajo_vehiculoId_fkey` FOREIGN KEY (`vehiculoId`) REFERENCES `Vehiculo`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `OrdenTrabajo` ADD CONSTRAINT `OrdenTrabajo_facturaId_fkey` FOREIGN KEY (`facturaId`) REFERENCES `Factura`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OrdenRepuesto` ADD CONSTRAINT `OrdenRepuesto_ordenId_fkey` FOREIGN KEY (`ordenId`) REFERENCES `OrdenTrabajo`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `Empleado` ADD CONSTRAINT `Empleado_puestoId_fkey` FOREIGN KEY (`puestoId`) REFERENCES `Puesto`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -160,13 +155,7 @@ ALTER TABLE `DetalleOrdenTrabajo` ADD CONSTRAINT `DetalleOrdenTrabajo_ordenTraba
 ALTER TABLE `DetalleOrdenTrabajo` ADD CONSTRAINT `DetalleOrdenTrabajo_empleadoId_fkey` FOREIGN KEY (`empleadoId`) REFERENCES `Empleado`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `OrdenRepuesto` ADD CONSTRAINT `OrdenRepuesto_ordenId_fkey` FOREIGN KEY (`ordenId`) REFERENCES `OrdenTrabajo`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `OrdenRepuesto` ADD CONSTRAINT `OrdenRepuesto_repuestoId_fkey` FOREIGN KEY (`repuestoId`) REFERENCES `Repuesto`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Factura` ADD CONSTRAINT `Factura_ordenId_fkey` FOREIGN KEY (`ordenId`) REFERENCES `OrdenTrabajo`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Factura` ADD CONSTRAINT `Factura_pagoId_fkey` FOREIGN KEY (`pagoId`) REFERENCES `Pago`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `DetalleFactura` ADD CONSTRAINT `DetalleFactura_facturaId_fkey` FOREIGN KEY (`facturaId`) REFERENCES `Factura`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
