@@ -41,9 +41,10 @@ export default function FacturaPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    if (name === 'total') return; // evitar modificación manual
     setForm((prev) => ({
       ...prev,
-      [name]: ['descuento', 'total'].includes(name) ? parseFloat(value) || 0 : value,
+      [name]: name === 'descuento' ? parseFloat(value) || 0 : value,
     }));
   };
 
@@ -63,7 +64,6 @@ export default function FacturaPage() {
       fechaEmision: form.fechaEmision,
       descuento: form.descuento,
       estado: form.estado,
-      total: form.total,
       pagoId: form.pagoId ?? null,
     };
 
@@ -83,6 +83,8 @@ export default function FacturaPage() {
   const handleEdit = (factura: Factura) => {
     setForm({
       ...factura,
+      total: Number(factura.total),        // conversión explícita
+      descuento: Number(factura.descuento), // por si también es Decimal
       fechaEmision: factura.fechaEmision?.split('T')[0] ?? '',
     });
     setShowModal(true);
@@ -102,9 +104,7 @@ export default function FacturaPage() {
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="m-0">
-          <i className="bi bi-receipt"></i> Facturas
-        </h2>
+        <h2 className="m-0"><i className="bi bi-receipt"></i> Facturas</h2>
         <Button onClick={() => setShowModal(true)}>Agregar Factura</Button>
       </div>
 
@@ -128,19 +128,9 @@ export default function FacturaPage() {
               <td>{f.estado}</td>
               <td>Q{Number(f.descuento || 0).toFixed(2)}</td>
               <td>
-                <Button
-                  size="sm"
-                  variant="info"
-                  onClick={() => navigate(`/detalles-factura/${f.id}`)}
-                >
-                  Detalle
-                </Button>{' '}
-                <Button size="sm" variant="success" onClick={() => handleEdit(f)}>
-                  Editar
-                </Button>{' '}
-                <Button size="sm" variant="danger" onClick={() => handleDelete(f.id!)}>
-                  Eliminar
-                </Button>
+                <Button size="sm" variant="info" onClick={() => navigate(`/detalles-factura/${f.id}`)}>Detalle</Button>{' '}
+                <Button size="sm" variant="success" onClick={() => handleEdit(f)}>Editar</Button>{' '}
+                <Button size="sm" variant="danger" onClick={() => handleDelete(f.id!)}>Eliminar</Button>
               </td>
             </tr>
           ))}
@@ -190,21 +180,15 @@ export default function FacturaPage() {
               <Form.Control
                 type="number"
                 name="total"
-                min={0}
-                step="0.01"
-                value={form.total}
-                onChange={handleChange}
+                value={Number(form.total).toFixed(2)}
+                readOnly
               />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={resetForm}>
-            Cancelar
-          </Button>
-          <Button variant="primary" onClick={handleSubmit}>
-            Guardar
-          </Button>
+          <Button variant="secondary" onClick={resetForm}>Cancelar</Button>
+          <Button variant="primary" onClick={handleSubmit}>Guardar</Button>
         </Modal.Footer>
       </Modal>
     </div>

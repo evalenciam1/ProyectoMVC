@@ -14,5 +14,4 @@ router.get('/', obtenerFacturas);                    // Obtener todas
 router.get('/:id', obtenerFacturaPorId);             // Obtener por ID
 router.put('/:id', actualizarFactura);               // Actualizar por ID
 router.delete('/:id', eliminarFactura);              // Eliminar por ID
-
 export default router;

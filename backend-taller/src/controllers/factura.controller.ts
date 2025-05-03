@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/prisma';
+import { Prisma } from '@prisma/client'; // Importante para usar Decimal
 
 // Crear factura
 export const crearFactura = async (req: Request, res: Response) => {
@@ -9,9 +10,9 @@ export const crearFactura = async (req: Request, res: Response) => {
     const factura = await prisma.factura.create({
       data: {
         fechaEmision: new Date(fechaEmision),
-        descuento: parseFloat(descuento),
+        descuento: new Prisma.Decimal(descuento),
         estado,
-        total: parseFloat(total),
+        total: new Prisma.Decimal(total),
         pagoId: pagoId ? Number(pagoId) : null,
       },
     });
@@ -64,18 +65,22 @@ export const obtenerFacturaPorId = async (req: Request, res: Response) => {
 // Actualizar factura
 export const actualizarFactura = async (req: Request, res: Response) => {
   const id = Number(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ mensaje: 'ID inválido' });
+
   const { fechaEmision, descuento, estado, total, pagoId } = req.body;
 
   try {
+    const data: any = {};
+
+    if (fechaEmision !== undefined) data.fechaEmision = new Date(fechaEmision);
+    if (descuento !== undefined) data.descuento = new Prisma.Decimal(descuento);
+    if (estado !== undefined) data.estado = estado;
+    if (total !== undefined) data.total = new Prisma.Decimal(total);
+    if (pagoId !== undefined) data.pagoId = pagoId ? Number(pagoId) : null;
+
     const factura = await prisma.factura.update({
       where: { id },
-      data: {
-        fechaEmision: new Date(fechaEmision),
-        descuento: parseFloat(descuento),
-        estado,
-        total: parseFloat(total),
-        pagoId: pagoId ? Number(pagoId) : null,
-      },
+      data,
     });
 
     res.json(factura);

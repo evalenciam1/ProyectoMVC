@@ -1,17 +1,30 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/prisma';
+import { Prisma } from '@prisma/client';
+
+// Función para recalcular el total de una factura
+
+const recalcularTotalFactura = async (facturaId: number) => {
+  console.log('Recalculando total para factura', facturaId); // <-- AÑADE ESTO
+
+  const detalles = await prisma.detalleFactura.findMany({
+    where: { facturaId },
+  });
+  const total = detalles.reduce((sum, d) => {
+    const subtotalNumber = typeof d.subtotal === 'string' ? parseFloat(d.subtotal) : d.subtotal.toNumber();
+    return sum + subtotalNumber;
+  }, 0);
+
+  await prisma.factura.update({
+    where: { id: facturaId },
+    data: { total: new Prisma.Decimal(total) },
+  });
+};
+
 
 // Crear detalle de factura
 export const crearDetalleFactura = async (req: Request, res: Response) => {
-  const {
-    facturaId,
-    pagoId,
-    ordenId,
-    cantidad,
-    descripcion,
-    precioUnitario,
-    subtotal,
-  } = req.body;
+  const { facturaId, pagoId, ordenId, cantidad, precioUnitario, subtotal } = req.body;
 
   try {
     const detalle = await prisma.detalleFactura.create({
@@ -20,11 +33,12 @@ export const crearDetalleFactura = async (req: Request, res: Response) => {
         pagoId: pagoId ? Number(pagoId) : null,
         ordenId: Number(ordenId),
         cantidad: Number(cantidad),
-        descripcion: descripcion.trim(), // asegúrate de que sea string no vacío
         precioUnitario: parseFloat(precioUnitario),
         subtotal: parseFloat(subtotal),
       },
     });
+
+    await recalcularTotalFactura(Number(facturaId));
 
     res.status(201).json(detalle);
   } catch (error) {
@@ -70,18 +84,25 @@ export const obtenerDetalleFacturaPorId = async (req: Request, res: Response) =>
   }
 };
 
+// Obtener detalles por facturaId (para frontend)
+export const obtenerDetallesPorFacturaId = async (req: Request, res: Response) => {
+  const facturaId = Number(req.params.facturaId);
+
+  try {
+    const detalles = await prisma.detalleFactura.findMany({
+      where: { facturaId },
+    });
+
+    res.json(detalles);
+  } catch (error) {
+    res.status(500).json({ mensaje: 'Error al obtener detalles por factura', error });
+  }
+};
+
 // Actualizar detalle de factura
 export const actualizarDetalleFactura = async (req: Request, res: Response) => {
   const id = Number(req.params.id);
-  const {
-    facturaId,
-    pagoId,
-    ordenId,
-    cantidad,
-    descripcion,
-    precioUnitario,
-    subtotal,
-  } = req.body;
+  const { facturaId, pagoId, ordenId, cantidad, precioUnitario, subtotal } = req.body;
 
   try {
     const detalle = await prisma.detalleFactura.update({
@@ -91,11 +112,12 @@ export const actualizarDetalleFactura = async (req: Request, res: Response) => {
         pagoId: pagoId ? Number(pagoId) : null,
         ordenId: Number(ordenId),
         cantidad: Number(cantidad),
-        descripcion: descripcion.trim(),
         precioUnitario: parseFloat(precioUnitario),
         subtotal: parseFloat(subtotal),
       },
     });
+
+    await recalcularTotalFactura(Number(facturaId));
 
     res.json(detalle);
   } catch (error) {
@@ -108,7 +130,16 @@ export const eliminarDetalleFactura = async (req: Request, res: Response) => {
   const id = Number(req.params.id);
 
   try {
+    const detalleExistente = await prisma.detalleFactura.findUnique({ where: { id } });
+
+    if (!detalleExistente) {
+      return res.status(404).json({ mensaje: 'Detalle no encontrado' });
+    }
+
     await prisma.detalleFactura.delete({ where: { id } });
+
+    await recalcularTotalFactura(detalleExistente.facturaId);
+
     res.json({ mensaje: 'Detalle de factura eliminado correctamente' });
   } catch (error) {
     res.status(500).json({ mensaje: 'Error al eliminar detalle', error });
