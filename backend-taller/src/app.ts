@@ -1,5 +1,5 @@
-import  Express  from "express";
-import cors from 'cors';
+import Express from "express";
+import cors from "cors";
 import dotenv from "dotenv";
 import usuarioRouter from "./routes/usuario.routes";
 import clienteRouter from "./routes/cliente.routes"; // ✅ Importar correctamente
@@ -10,17 +10,17 @@ import OrdenRepuesto  from './routes/ordenRepuesto.routes';
 import puestoRouter from './routes/puesto.routes';
 import empleadoRoutes from './routes/empleado.routes';
 
+
 dotenv.config();
 
 const app = Express();
+
 app.use(cors());
 app.use(Express.json());
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.send("API Taller Automotriz funcionando");
 });
-
-// Importar las rutas de los controladores
 
 app.use('/api/usuarios', usuarioRouter);
 app.use('/api/clientes', clienteRouter);
@@ -30,5 +30,6 @@ app.use('/api/detalles-orden', detalleOrdenTrabajoRouter);
 app.use('/api/repuestos', OrdenRepuesto);
 app.use('/api/puestos', puestoRouter);
 app.use('/api/empleados', empleadoRoutes);
+
 
 export default app;

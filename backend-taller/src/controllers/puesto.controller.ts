@@ -1,5 +1,26 @@
-import { Request, Response } from 'express';
-import { prisma } from '../config/prisma';
+import { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+// Crear un puesto
+export const crearPuesto = async (req: Request, res: Response) => {
+  const { nombre, departamento, descripcion } = req.body;
+
+  try {
+    const puesto = await prisma.puesto.create({
+      data: {
+        nombre,
+        departamento,
+        descripcion,
+      },
+    });
+
+    res.status(201).json(puesto);
+  } catch (error) {
+    res.status(500).json({ error: "Error al crear el puesto." });
+  }
+};
 
 // Obtener todos los puestos
 export const obtenerPuestos = async (_req: Request, res: Response) => {
@@ -9,82 +30,70 @@ export const obtenerPuestos = async (_req: Request, res: Response) => {
         empleados: true,
       },
     });
+
     res.json(puestos);
   } catch (error) {
-    console.error('Error al obtener puestos:', error);
-    res.status(500).json({ mensaje: 'Error al obtener puestos', error });
+    res.status(500).json({ error: "Error al obtener los puestos." });
   }
 };
 
 // Obtener un puesto por ID
 export const obtenerPuestoPorId = async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+  const { id } = req.params;
+  const idNumber = Number(id);
+
+  if (isNaN(idNumber)) {
+    return res.status(400).json({ mensaje: "ID inválido" });
+  }
+
   try {
     const puesto = await prisma.puesto.findUnique({
-      where: { id },
+      where: { id: idNumber },
       include: {
         empleados: true,
       },
     });
-    if (!puesto) return res.status(404).json({ mensaje: 'Puesto no encontrado' });
-    res.json(puesto);
-  } catch (error) {
-    console.error('Error al obtener puesto:', error);
-    res.status(500).json({ mensaje: 'Error al obtener puesto', error });
-  }
-};
 
-// Crear un nuevo puesto
-export const crearPuesto = async (req: Request, res: Response) => {
-  const { nombre, departamento, descripcion } = req.body;
+    if (!puesto) return res.status(404).json({ mensaje: "Puesto no encontrado" });
 
-  try {
-    const nuevoPuesto = await prisma.puesto.create({
-      data: {
-        nombre,
-        departamento,
-        descripcion,
-      },
-    });
-    res.status(201).json(nuevoPuesto);
+    return res.json(puesto);
   } catch (error) {
-    console.error('Error al crear puesto:', error);
-    res.status(500).json({ mensaje: 'Error al crear puesto', error });
+    return res.status(500).json({ mensaje: "Error al obtener el puesto" });
   }
 };
 
 // Actualizar un puesto
 export const actualizarPuesto = async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+  const { id } = req.params;
   const { nombre, departamento, descripcion } = req.body;
 
   try {
-    const puestoActualizado = await prisma.puesto.update({
-      where: { id },
+    const puesto = await prisma.puesto.update({
+      where: { id: Number(id) },
       data: {
         nombre,
         departamento,
         descripcion,
       },
     });
-    res.json(puestoActualizado);
+
+    res.json(puesto);
   } catch (error) {
-    console.error('Error al actualizar puesto:', error);
-    res.status(500).json({ mensaje: 'Error al actualizar puesto', error });
+    res.status(500).json({ error: "Error al actualizar el puesto." });
   }
 };
 
 // Eliminar un puesto
 export const eliminarPuesto = async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+  const { id } = req.params;
 
   try {
     await prisma.puesto.delete({
-      where: { id },
+      where: { id: Number(id) },
     });
-    res.json({ mensaje: 'Puesto eliminado correctamente' });
+
+    res.status(204).send();
   } catch (error) {
-    console.error('Error al eliminar puesto:', error);
-    res.status(500).json({ mensaje: 'Error al eliminar puesto', error });
+    res.status(500).json({ error: "Error al eliminar el puesto." });
   }
 };

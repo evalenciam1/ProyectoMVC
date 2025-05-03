@@ -9,9 +9,8 @@ import Clientes from './pages/Clientes';
 import Vehiculos from './pages/Vehiculos';
 import Ordenes from './pages/Ordenes';
 import DetalleOrdenes from './pages/DetalleOrdenes';
-import Empleados from './pages/Empleados';
-import Puestos from './pages/Puestos';
-import RepuestosOrden from './pages/OrdenRepuestos';
+import Empleados from './pages/Empleado';
+import Puestos from './pages/Puesto';
 
 function App() {
 
@@ -26,8 +25,9 @@ function App() {
         <Route path="/vehiculos" element={<Vehiculos />} />
         <Route path="/ordenes" element={<Ordenes />} />
         <Route path='/detalles' element={<DetalleOrdenes />} />
-        <Route path='/repuestos/:ordenId' element={<RepuestosOrden />} />
-        <Route path="/detalles/:ordenId" element={<DetalleOrdenes />}/>{/* ✅ aquí */}
+        <Route path="/detalles/:ordenId" element={<DetalleOrdenes />}/>
+        <Route path="/empleados" element={<Empleados />} />
+        <Route path="/puestos" element={<Puestos />} />
       </Routes>
     </div>
   </Router>
