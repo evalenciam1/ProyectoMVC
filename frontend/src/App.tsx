@@ -12,6 +12,8 @@ import DetalleOrdenes from './pages/DetalleOrdenes';
 import Empleados from './pages/Empleados';
 import Puestos from './pages/Puestos';
 import RepuestosOrden from './pages/OrdenRepuestos';
+import Facturas from './pages/factura';
+import DetalleFacturas from './pages/DetalleFactura';
 
 function App() {
 
@@ -28,6 +30,8 @@ function App() {
         <Route path='/detalles' element={<DetalleOrdenes />} />
         <Route path='/repuestos/:ordenId' element={<RepuestosOrden />} />
         <Route path="/detalles/:ordenId" element={<DetalleOrdenes />}/>{/* ✅ aquí */}
+        <Route path='/facturas' element={<Facturas />} />
+        <Route path="/detalles-factura/:facturaId" element={<DetalleFacturas />} />
       </Routes>
     </div>
   </Router>
