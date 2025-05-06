@@ -65,6 +65,7 @@ export default function FacturaPage() {
       descuento: form.descuento,
       estado: form.estado,
       pagoId: form.pagoId ?? null,
+      total: 0,
     };
 
     try {
