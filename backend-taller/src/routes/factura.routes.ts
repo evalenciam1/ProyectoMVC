@@ -4,14 +4,17 @@ import {
   obtenerFacturas,
   obtenerFacturaPorId,
   actualizarFactura,
-  eliminarFactura
+  eliminarFactura,
+  generarFacturaDesdeOrden
 } from '../controllers/factura.controller';
 
 const router = Router();
 
-router.post('/', crearFactura);                       // Crear factura
-router.get('/', obtenerFacturas);                    // Obtener todas
-router.get('/:id', obtenerFacturaPorId);             // Obtener por ID
-router.put('/:id', actualizarFactura);               // Actualizar por ID
-router.delete('/:id', eliminarFactura);              // Eliminar por ID
+router.post('/', crearFactura);
+router.get('/', obtenerFacturas);
+router.get('/:id', obtenerFacturaPorId);
+router.put('/:id', actualizarFactura);
+router.delete('/:id', eliminarFactura);
+router.post('/generar-desde-orden/:ordenId', generarFacturaDesdeOrden);
+
 export default router;
