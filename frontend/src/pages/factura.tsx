@@ -84,8 +84,8 @@ export default function FacturaPage() {
   const handleEdit = (factura: Factura) => {
     setForm({
       ...factura,
-      total: Number(factura.total),        // conversión explícita
-      descuento: Number(factura.descuento), // por si también es Decimal
+      total: Number(factura.total),
+      descuento: Number(factura.descuento),
       fechaEmision: factura.fechaEmision?.split('T')[0] ?? '',
     });
     setShowModal(true);

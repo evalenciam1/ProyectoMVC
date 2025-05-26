@@ -4,24 +4,35 @@ import { Button, Modal, Table, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-
 interface Orden {
   id?: number;
   vehiculoId: number;
   estado: string;
-  clienteId: number;
   descripcion: string;
+  vehiculo?: {
+    placa: string;
+    marca: string;
+    modelo: string;
+  };
+}
+
+interface Vehiculo {
+  id: number;
+  placa: string;
+  marca: string;
+  modelo: string;
 }
 
 export default function Ordenes() {
   const [ordenes, setOrdenes] = useState<Orden[]>([]);
+  const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<Orden>({
     vehiculoId: 1,
     estado: 'Pendiente',
     descripcion: '',
-    clienteId: 1,
   });
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,16 +40,21 @@ export default function Ordenes() {
       const { data } = await api.get('/ordenes-trabajo');
       setOrdenes(data);
     };
+
+    const loadVehiculos = async () => {
+      const { data } = await api.get('/vehiculos');
+      setVehiculos(data);
+    };
+
     loadOrdenes();
+    loadVehiculos();
   }, []);
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
-    const parsedValue = ['vehiculoId', 'clienteId'].includes(name)
-      ? Number(value)
-      : value;
+    const parsedValue = name === 'vehiculoId' ? Number(value) : value;
     setForm({ ...form, [name]: parsedValue });
-  };  
+  };
 
   const handleSubmit = async () => {
     const method = form.id ? 'put' : 'post';
@@ -47,7 +63,6 @@ export default function Ordenes() {
     setShowModal(false);
     setForm({
       vehiculoId: 1,
-      clienteId: 1,
       estado: 'Pendiente',
       descripcion: '',
     });
@@ -66,20 +81,30 @@ export default function Ordenes() {
     setOrdenes(data);
   };
 
-  
+  const handleGenerarFactura = async (id: number) => {
+    try {
+      const { data } = await api.post(`/facturas/generar-desde-orden/${id}`);
+      alert(data.mensaje || 'Factura generada correctamente');
+      const facturaId = data.factura.id;
+      navigate(`/detalles-factura/${facturaId}`);
+    } catch (error) {
+      console.error(error);
+      alert('Error al generar la factura');
+    }
+  };
 
   return (
     <div className="container mt-4">
-  <div className="d-flex justify-content-between align-items-center mb-3">
-    <h2 className="m-0"><i className="bi bi-file-earmark-spreadsheet"></i>  Órdenes de Trabajo</h2>
-    <Button onClick={() => setShowModal(true)}>Agregar Orden</Button>
-  </div>
-      <Table striped bordered hover className='table table-striped table-dark'>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h2 className="m-0"><i className="bi bi-file-earmark-spreadsheet"></i> Órdenes de Trabajo</h2>
+        <Button onClick={() => setShowModal(true)}>Agregar Orden</Button>
+      </div>
+
+      <Table striped bordered hover className="table table-striped table-dark">
         <thead>
           <tr>
             <th>ID</th>
-            <th>Vehículo ID</th>
-            <th>Cliente ID</th>
+            <th>Vehículo</th>
             <th>Estado</th>
             <th>Descripcion</th>
             <th>Acciones</th>
@@ -89,15 +114,27 @@ export default function Ordenes() {
           {ordenes.map(o => (
             <tr key={o.id}>
               <td>{o.id}</td>
-              <td>{o.vehiculoId}</td>
-              <td>{o.clienteId}</td>
+              <td>
+                {o.vehiculo
+                  ? `${o.vehiculo.placa} - ${o.vehiculo.marca} ${o.vehiculo.modelo}`
+                  : `ID ${o.vehiculoId}`}
+              </td>
               <td>{o.estado}</td>
               <td>{o.descripcion}</td>
               <td>
-                <Button size="sm" variant="info"  onClick={() => navigate(`/detalles/${o.id}`)}>Servicios</Button>{' '}
-                <Button size="sm" variant="info"  onClick={() => navigate(`/repuestos/${o.id}`)}>Repuestos</Button>{' '}
+                <Button size="sm" variant="info" onClick={() => navigate(`/detalles/${o.id}`)}>Servicios</Button>{' '}
+                <Button size="sm" variant="info" onClick={() => navigate(`/repuestos/${o.id}`)}>Repuestos</Button>{' '}
                 <Button size="sm" variant="success" onClick={() => handleEdit(o)}>Editar</Button>{' '}
-                <Button size="sm" variant="danger" onClick={() => handleDelete(o.id!)}>Eliminar</Button>
+                <Button size="sm" variant="danger" onClick={() => handleDelete(o.id!)}>Eliminar</Button>{' '}
+                <Button
+                  size="sm"
+                  variant="primary"
+                  className="mt-1"
+                  onClick={() => handleGenerarFactura(o.id!)}
+                  disabled={o.estado.toLowerCase() === 'facturado'}
+                >
+                  Generar Factura
+                </Button>
               </td>
             </tr>
           ))}
@@ -111,21 +148,27 @@ export default function Ordenes() {
         <Modal.Body>
           <Form>
             <Form.Group>
-              <Form.Label>Vehículo ID</Form.Label>
-              <Form.Control name="vehiculoId" type="number" value={form.vehiculoId} onChange={handleChange} />
+              <Form.Label>Vehículo</Form.Label>
+              <Form.Select name="vehiculoId" value={form.vehiculoId} onChange={handleChange}>
+                <option value="">Seleccione un vehículo</option>
+                {vehiculos.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.placa} - {v.marca} {v.modelo}
+                  </option>
+                ))}
+              </Form.Select>
             </Form.Group>
-            <Form.Group>
-              <Form.Label>Cliente ID</Form.Label>
-              <Form.Control name="clienteId" type="number" value={form.clienteId} onChange={handleChange} />
-            </Form.Group>
+
             <Form.Group>
               <Form.Label>Estado</Form.Label>
               <Form.Select name="estado" value={form.estado} onChange={handleChange}>
                 <option value="Pendiente">Pendiente</option>
                 <option value="En proceso">En proceso</option>
                 <option value="Finalizado">Finalizado</option>
+                <option value="facturado">Facturado</option>
               </Form.Select>
             </Form.Group>
+
             <Form.Group>
               <Form.Label>Descripcion</Form.Label>
               <Form.Control name="descripcion" value={form.descripcion} onChange={handleChange} />
