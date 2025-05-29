@@ -3,6 +3,8 @@ import { api } from '../api/api';
 import { Button, Modal, Table, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface Orden {
   id?: number;
@@ -93,11 +95,42 @@ export default function Ordenes() {
     }
   };
 
+  const generarPDF = () => {
+      if (!ordenes) return;
+  
+      const pdf = new jsPDF();
+      pdf.setFontSize(18);
+      pdf.text(`Ordenes`, 14, 15);
+      pdf.setFontSize(12);
+      pdf.text('Este es el detalle de ordenes abiertas',14,30);
+      
+  
+
+  
+      autoTable(pdf, {
+        startY: 50,
+        head: [['ID', 'Fecha', 'Placa', 'Marca', 'Descripcion', 'Estado']],
+        body: ordenes.map((d) => [
+          d.id,
+          new Date(d.fecha).toLocaleDateString('es-ES'),
+          d.vehiculo?.placa,
+          d.vehiculo?.marca,
+          d.descripcion,
+          d.estado,
+        ]),
+      });
+  
+      pdf.save(`ordenes.pdf`);
+    };
+
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2 className="m-0"><i className="bi bi-file-earmark-spreadsheet"></i> Órdenes de Trabajo</h2>
         <Button onClick={() => setShowModal(true)}>Agregar Orden</Button>
+        <Button variant="warning" onClick={generarPDF}>
+            Generar PDF
+          </Button>
       </div>
 
       <Table striped bordered hover className="table table-striped table-dark">
