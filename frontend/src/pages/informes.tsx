@@ -46,6 +46,27 @@ interface Orden {
     };
 }
 
+interface Servicios {
+    id?: number;
+    ordenTrabajoId: number;
+    empleadoId?: number;
+    descripcion: string;
+    cantidad: number;
+    precioUnitario: number;
+    costoUnitario: number;
+    empleado: { nombre: string } | null;
+    ordenTrabajo: { estado: string, descripcion: string } | null;
+}
+
+interface Repuestos {
+    id?: number;
+    ordenId: number;
+    descripcion: string;
+    cantidad: number;
+    precioUnitario: number;
+    costoUnitario: number;
+}
+
 interface Vehiculo {
     id?: number;
     placa: string;
@@ -61,6 +82,9 @@ export default function informes() {
     const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
     const [detalleFacturas, setDetalles] = useState<DetalleFactura[]>([]);
     const [factura, setFactura] = useState<Factura | null>(null);
+    const [servicios, setServicios] = useState<Servicios[]>([]);
+    const [totalServicios, setTotalServicios] = useState(0);
+    const [repuestos, setRepuestos] = useState<Repuestos[]>([]);
 
     //Cargamos vehiculos
     const loadVehiculos = async () => {
@@ -71,16 +95,87 @@ export default function informes() {
         const { data } = await api.get('/ordenes-trabajo');
         setOrdenes(data);
     };
+
+    //Carga de servicios realizados
+    const loadServicios = async () => {
+        const { data } = await api.get(`/detalles-orden`);
+        setServicios(data);
+        const total = data.reduce((sum: number, item: any) => sum + Number(item.costoUnitario), 0);
+        setTotalServicios(total); // Guarda el total si quieres mostrarlo
+    };
+
+    //Carga de repuestos utilizados totales
+    const loadRepuestos = async () => {
+        const { data } = await api.get(`/repuestos`);
+        setRepuestos(data);
+    };
+
     useEffect(() => {
         loadVehiculos();
         loadOrdenes();
+        loadServicios();
+        loadRepuestos();
 
     }, []);
 
+    //Generacion de PDF de Servicios
+    const generarPDFServicios = () => {
+        if (!servicios) return;
+
+        const pdf = new jsPDF();
+        pdf.setFontSize(18);
+        pdf.text(`Servicios realizados`, 14, 15);
+        pdf.setFontSize(12);
+        pdf.text('Este es el detalle de servicios realizados', 14, 30);
+
+
+        autoTable(pdf, {
+            startY: 50,
+            head: [['ID', 'Empleado', 'Descripcion', 'Precio Unitario', 'Cantidad', 'Costo']],
+            body: servicios.map((s) => [
+                s.id,
+                s.empleado?.nombre,
+                s.descripcion,
+                s.precioUnitario,
+                s.cantidad,
+                s.costoUnitario,
+            ]), 
+        });
+
+        pdf.save(`servicios.pdf`);
+    };
+
+    //Generacion de PDF de repuestos
+    const generarPDFRepuestos = () => {
+        if (!repuestos) return;
+
+        const pdf = new jsPDF();
+        pdf.setFontSize(18);
+        pdf.text(`Repuestos utilizados`, 14, 15);
+        pdf.setFontSize(12);
+        pdf.text('Este es el detalle de repuestos utilizados', 14, 30);
+
+
+        autoTable(pdf, {
+            startY: 50,
+            head: [['ID', 'Id Orden', 'Descripcion', 'Precio Unitario', 'Cantidad', 'Costo']],
+            body: repuestos.map((r) => [
+                r.id,
+                r.ordenId,
+                r.descripcion,
+                r.precioUnitario,
+                r.cantidad,
+                r.costoUnitario,
+            ]),
+
+        });
+
+        pdf.save(`repuestos.pdf`);
+    };
 
 
     return (
-        <div className="container mt-4">
+        <div className="card">
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h2><i className="bi bi-receipt"></i> Generacion de informes</h2>
             </div>
@@ -99,9 +194,9 @@ export default function informes() {
                         </Form.Select>
                     </Form.Group>
                 </Form>
-                            <h3>Informe de ordenes</h3>
-                            <Form>
-                            <Form.Group>
+                <h3>Informe de ordenes</h3>
+                <Form>
+                    <Form.Group>
                         <Form.Label>Ordenes</Form.Label>
                         <Form.Select name="vehiculoId" value={vehiculos.id}>
                             <option value="">Seleccione un vehículo</option>
@@ -112,7 +207,17 @@ export default function informes() {
                             ))}
                         </Form.Select>
                     </Form.Group>
-                    </Form>
+                </Form>
+                <div className='card'>
+                    <h3>Informes de utilizacion</h3>
+
+                    <Button variant="warning" onClick={generarPDFServicios}>
+                        Generar PDF de Servicios
+                    </Button>
+                    <Button variant="warning" onClick={generarPDFRepuestos}>
+                        Generar PDF de Repuestos
+                    </Button>
+                </div>
             </div>
         </div>
     );
