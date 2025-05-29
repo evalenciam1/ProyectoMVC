@@ -96,8 +96,6 @@ export default function Ordenes() {
     }
   };
 
-
-  //Generacion de PDF de ordenes
   const generarPDF = () => {
       if (!ordenes) return;
   
@@ -125,7 +123,6 @@ export default function Ordenes() {
   
       pdf.save(`ordenes.pdf`);
     };
-
 
   return (
     <div className="container mt-4">
