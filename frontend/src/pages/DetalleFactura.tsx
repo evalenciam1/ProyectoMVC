@@ -1,263 +1,144 @@
-import { useEffect, useState, ChangeEvent } from 'react';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api/api';
-import { Button, Modal, Table, Form } from 'react-bootstrap';
-import { cleanData } from '../utils/cleanData';
+import { Table, Button } from 'react-bootstrap';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface DetalleFactura {
-  id?: number;
+  id: number;
   facturaId: number;
-  pagoId?: number;
   ordenId: number;
   cantidad: number;
   precioUnitario: number;
   subtotal: number;
+  descripcion?: string;
 }
 
 interface Factura {
   id: number;
   fechaEmision: string;
-  total: number;
+  descuento: number | string;
+  estado: string;
+  total: number | string;
+  ordenes?: {
+    vehiculo?: {
+      placa: string;
+      descripcion: string;
+      cliente?: {
+        nombre: string;
+      };
+    };
+  }[];
 }
 
-interface OrdenTrabajo {
-  id: number;
-  descripcion: string;
-}
-
-export default function DetalleFacturaPage() {
+export default function DetalleFactura() {
+  const { facturaId } = useParams();
+  const navigate = useNavigate();
   const [detalles, setDetalles] = useState<DetalleFactura[]>([]);
-  const [facturas, setFacturas] = useState<Factura[]>([]);
-  const [ordenes, setOrdenes] = useState<OrdenTrabajo[]>([]);
-  const [showModal, setShowModal] = useState(false);
-
-  const [form, setForm] = useState<DetalleFactura>({
-    facturaId: 0,
-    ordenId: 0,
-    cantidad: 1,
-    precioUnitario: 0,
-    subtotal: 0,
-    pagoId: undefined,
-  });
-
-  const isEditing = !!form.id;
-
-  const loadData = async () => {
-    try {
-      const [detResp, factResp, ordenResp] = await Promise.all([
-        api.get('/detalle-factura'),
-        api.get('/facturas'),
-        api.get('/ordenes-trabajo'),
-      ]);
-
-      setDetalles(detResp.data);
-      setFacturas(factResp.data);
-      setOrdenes(ordenResp.data);
-    } catch (error) {
-      console.error('Error al cargar datos', error);
-    }
-  };
+  const [factura, setFactura] = useState<Factura | null>(null);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    const fetchData = async () => {
+      const { data: detallesData } = await api.get(`/detalle-factura?facturaId=${facturaId}`);
+      setDetalles(detallesData);
 
-  const handleChange = (e: ChangeEvent<any>) => {
-    const { name, value } = e.target;
-    const numericFields = ['cantidad', 'precioUnitario', 'facturaId', 'ordenId'];
-    const parsed = numericFields.includes(name) ? parseFloat(value) || 0 : value;
+      const { data: facturaData } = await api.get(`/facturas/${facturaId}`);
+      setFactura(facturaData);
+    };
 
-    setForm((prev) => {
-      const updated = { ...prev, [name]: parsed };
-      updated.subtotal = (updated.cantidad || 0) * (updated.precioUnitario || 0);
-      return updated;
+    fetchData();
+  }, [facturaId]);
+
+  const generarPDF = () => {
+    if (!factura) return;
+
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(`Factura #${factura.id}`, 14, 15);
+
+    doc.setFontSize(12);
+    doc.text(`Fecha: ${factura.fechaEmision.split('T')[0]}`, 14, 25);
+    doc.text(`Estado: ${factura.estado}`, 14, 32);
+    doc.text(`Descuento: Q${Number(factura.descuento).toFixed(2)}`, 14, 39);
+    doc.text(`Total: Q${Number(factura.total).toFixed(2)}`, 14, 46);
+
+    const orden = factura.ordenes?.[0];
+    const vehiculo = orden?.vehiculo;
+    const cliente = vehiculo?.cliente;
+
+    if (cliente) doc.text(`Cliente: ${cliente.nombre}`, 14, 53);
+    if (vehiculo) {
+      doc.text(`Vehículo: ${vehiculo.descripcion}`, 14, 60);
+      doc.text(`Placa: ${vehiculo.placa}`, 14, 67);
+    }
+
+    autoTable(doc, {
+      startY: 75,
+      head: [['ID', 'Orden', 'Descripción', 'Cantidad', 'Precio Unitario', 'Subtotal']],
+      body: detalles.map((d) => [
+        d.id,
+        d.ordenId,
+        d.descripcion || '-',
+        d.cantidad,
+        `Q${Number(d.precioUnitario).toFixed(2)}`,
+        `Q${Number(d.subtotal).toFixed(2)}`,
+      ]),
     });
-  };
 
-  const resetForm = () => {
-    setForm({
-      facturaId: 0,
-      ordenId: 0,
-      cantidad: 1,
-      precioUnitario: 0,
-      subtotal: 0,
-      pagoId: undefined,
-    });
-    setShowModal(false);
-  };
-
-  const actualizarTotalFactura = async (facturaId: number) => {
-    try {
-      const { data: detallesFactura } = await api.get(`/detalle-factura/factura/${facturaId}`);
-      const nuevoTotal = detallesFactura.reduce((sum: number, det: DetalleFactura) => sum + det.subtotal, 0);
-      await api.put(`/facturas/${facturaId}`, { total: nuevoTotal });
-  
-      // ⚠️ Llamar a recargar facturas si tienes acceso a esa función
-      // Si estás en el componente padre (FacturaPage), refresca el listado desde allí
-  
-    } catch (error) {
-      console.error('Error al actualizar el total de la factura', error);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!form.facturaId || form.facturaId === 0) {
-      alert('Por favor selecciona una Factura válida.');
-      return;
-    }
-    if (!form.ordenId || form.ordenId === 0) {
-      alert('Por favor selecciona una Orden de Trabajo válida.');
-      return;
-    }
-
-    const dto = cleanData(form, [
-      'facturaId',
-      'ordenId',
-      'pagoId',
-      'cantidad',
-      'precioUnitario',
-      'subtotal',
-    ]);
-
-    try {
-      if (isEditing) {
-        await api.put(`/detalle-factura/${form.id}`, dto);
-      } else {
-        await api.post('/detalle-factura', dto);
-      }
-      await actualizarTotalFactura(form.facturaId);
-      await loadData();
-      resetForm();
-    } catch (error) {
-      console.error('Error al guardar detalle de factura', error);
-    }
-  };
-
-  const handleEdit = (detalle: DetalleFactura) => {
-    setForm(detalle);
-    setShowModal(true);
-  };
-
-  const handleDelete = async (id: number, facturaId: number) => {
-    if (confirm('¿Eliminar este detalle?')) {
-      await api.delete(`/detalle-factura/${id}`);
-      await actualizarTotalFactura(facturaId);
-      await loadData();
-    }
+    doc.save(`factura_${factura.id}.pdf`);
   };
 
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="m-0"><i className="bi bi-card-list"></i> Detalles de Factura</h2>
-        {facturas.length > 0 ? (
-          <Button onClick={() => setShowModal(true)}>Agregar Detalle</Button>
-        ) : (
-          <p className="text-muted">Primero debes crear al menos una factura.</p>
-        )}
+        <h2><i className="bi bi-receipt"></i> Detalles de Factura #{facturaId}</h2>
+        <Button variant="secondary" onClick={() => navigate('/facturas')}>
+          Volver a Facturas
+        </Button>
       </div>
 
-      <Table striped bordered hover className="table table-striped table-dark">
+      {factura && (
+        <div className="mb-4">
+          <p><strong>Fecha de Emisión:</strong> {factura.fechaEmision.split('T')[0]}</p>
+          <p><strong>Estado:</strong> {factura.estado}</p>
+          <p><strong>Descuento:</strong> Q{Number(factura.descuento).toFixed(2)}</p>
+          <p><strong>Total:</strong> Q{Number(factura.total).toFixed(2)}</p>
+          <hr />
+          <p><strong>Cliente:</strong> {factura.ordenes?.[0]?.vehiculo?.cliente?.nombre}</p>
+          <p><strong>Vehículo:</strong> {factura.ordenes?.[0]?.vehiculo?.descripcion}</p>
+          <p><strong>Placa:</strong> {factura.ordenes?.[0]?.vehiculo?.placa}</p>
+
+          <Button variant="warning" onClick={generarPDF}>
+            Generar PDF
+          </Button>
+        </div>
+      )}
+
+      <Table striped bordered hover className="table table-dark">
         <thead>
           <tr>
             <th>ID</th>
-            <th>Factura</th>
             <th>Orden</th>
+            <th>Descripción</th>
             <th>Cantidad</th>
             <th>Precio Unitario</th>
             <th>Subtotal</th>
-            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {detalles.map((d) => (
             <tr key={d.id}>
               <td>{d.id}</td>
-              <td>{d.facturaId}</td>
               <td>{d.ordenId}</td>
+              <td>{d.descripcion || '-'}</td>
               <td>{d.cantidad}</td>
-              <td>Q{Number(d.precioUnitario || 0).toFixed(2)}</td>
-              <td>Q{Number(d.subtotal || 0).toFixed(2)}</td>
-              <td>
-                <Button size="sm" variant="success" onClick={() => handleEdit(d)}>Editar</Button>{' '}
-                <Button size="sm" variant="danger" onClick={() => handleDelete(d.id!, d.facturaId)}>Eliminar</Button>
-              </td>
+              <td>Q{Number(d.precioUnitario).toFixed(2)}</td>
+              <td>Q{Number(d.subtotal).toFixed(2)}</td>
             </tr>
           ))}
         </tbody>
       </Table>
-
-      <Modal show={showModal} onHide={resetForm}>
-        <Modal.Header closeButton>
-          <Modal.Title>{isEditing ? 'Editar Detalle' : 'Nuevo Detalle de Factura'}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Factura</Form.Label>
-              <Form.Select
-                name="facturaId"
-                value={form.facturaId.toString()}
-                onChange={handleChange}
-              >
-                <option value="">Selecciona una factura</option>
-                {facturas.map(f => (
-                  <option key={f.id} value={f.id}>#{f.id} - {f.fechaEmision?.split('T')[0]}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Orden de Trabajo</Form.Label>
-              <Form.Select
-                name="ordenId"
-                value={form.ordenId.toString()}
-                onChange={handleChange}
-              >
-                <option value="">Selecciona una orden</option>
-                {ordenes.map(o => (
-                  <option key={o.id} value={o.id}>#{o.id} - {o.descripcion}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Cantidad</Form.Label>
-              <Form.Control
-                type="number"
-                name="cantidad"
-                min={1}
-                value={form.cantidad.toString()}
-                onChange={handleChange}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Precio Unitario (Q)</Form.Label>
-              <Form.Control
-                type="number"
-                name="precioUnitario"
-                step="0.01"
-                value={form.precioUnitario.toString()}
-                onChange={handleChange}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Subtotal (automático)</Form.Label>
-              <Form.Control
-                type="number"
-                name="subtotal"
-                readOnly
-                value={form.subtotal.toString()}
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={resetForm}>Cancelar</Button>
-          <Button variant="primary" onClick={handleSubmit}>Guardar</Button>
-        </Modal.Footer>
-      </Modal>
     </div>
   );
 }

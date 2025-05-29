@@ -3,15 +3,18 @@ import { prisma } from '../config/prisma';
 import { Prisma } from '@prisma/client';
 
 // Función para recalcular el total de una factura
-
 const recalcularTotalFactura = async (facturaId: number) => {
-  console.log('Recalculando total para factura', facturaId); // <-- AÑADE ESTO
+  console.log('Recalculando total para factura', facturaId);
 
   const detalles = await prisma.detalleFactura.findMany({
     where: { facturaId },
   });
+
   const total = detalles.reduce((sum, d) => {
-    const subtotalNumber = typeof d.subtotal === 'string' ? parseFloat(d.subtotal) : d.subtotal.toNumber();
+    const subtotalNumber =
+      typeof d.subtotal === 'string'
+        ? parseFloat(d.subtotal)
+        : d.subtotal.toNumber();
     return sum + subtotalNumber;
   }, 0);
 
@@ -20,7 +23,6 @@ const recalcularTotalFactura = async (facturaId: number) => {
     data: { total: new Prisma.Decimal(total) },
   });
 };
-
 
 // Crear detalle de factura
 export const crearDetalleFactura = async (req: Request, res: Response) => {
@@ -46,10 +48,13 @@ export const crearDetalleFactura = async (req: Request, res: Response) => {
   }
 };
 
-// Obtener todos los detalles
-export const obtenerDetallesFactura = async (_req: Request, res: Response) => {
+// ✅ Obtener detalles (filtrado por facturaId opcional)
+export const obtenerDetallesFactura = async (req: Request, res: Response) => {
   try {
+    const facturaId = req.query.facturaId ? Number(req.query.facturaId) : undefined;
+
     const detalles = await prisma.detalleFactura.findMany({
+      where: facturaId ? { facturaId } : {},
       include: {
         factura: true,
         pago: true,
@@ -84,7 +89,7 @@ export const obtenerDetalleFacturaPorId = async (req: Request, res: Response) =>
   }
 };
 
-// Obtener detalles por facturaId (para frontend)
+// Obtener detalles por facturaId (ya no se usa, puedes eliminar si quieres)
 export const obtenerDetallesPorFacturaId = async (req: Request, res: Response) => {
   const facturaId = Number(req.params.facturaId);
 
