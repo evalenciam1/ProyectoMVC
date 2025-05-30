@@ -8,6 +8,7 @@ import autoTable from 'jspdf-autotable';
 
 interface Orden {
   id?: number;
+  fecha?:Date;
   vehiculoId: number;
   estado: string;
   descripcion: string;
@@ -137,6 +138,7 @@ export default function Ordenes() {
         <thead>
           <tr>
             <th>ID</th>
+            <th>Fecha</th>
             <th>Vehículo</th>
             <th>Estado</th>
             <th>Descripcion</th>
@@ -147,6 +149,7 @@ export default function Ordenes() {
           {ordenes.map(o => (
             <tr key={o.id}>
               <td>{o.id}</td>
+              <td>{new Date(o.fecha).toLocaleDateString('es-ES')}</td>
               <td>
                 {o.vehiculo
                   ? `${o.vehiculo.placa} - ${o.vehiculo.marca} ${o.vehiculo.modelo}`
@@ -173,7 +176,7 @@ export default function Ordenes() {
           ))}
         </tbody>
       </Table>
-
+      
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>{form.id ? 'Editar Orden' : 'Nueva Orden'}</Modal.Title>

@@ -93,7 +93,7 @@ CREATE TABLE `DetalleOrdenTrabajo` (
     `descripcion` VARCHAR(191) NOT NULL,
     `cantidad` INTEGER NOT NULL,
     `precioUnitario` DECIMAL(10, 2) NOT NULL,
-    `costoUnitario` DECIMAL(10, 2) NOT NULL,
+    `costoUnitario` DECIMAL(10, 2) NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -127,6 +127,7 @@ CREATE TABLE `DetalleFactura` (
     `pagoId` INTEGER NULL,
     `ordenId` INTEGER NOT NULL,
     `cantidad` INTEGER NOT NULL,
+    `descripcion` VARCHAR(191) NULL,
     `precioUnitario` DECIMAL(10, 2) NOT NULL,
     `subtotal` DECIMAL(10, 2) NOT NULL,
 
