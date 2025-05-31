@@ -1,0 +1,15 @@
+.welcome-background {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fdfdfd, #f1f1f1);
+  background-image: url('/background-tools.jpg'); /* Asegúrate que este archivo exista en /public */
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.welcome-content {
+  max-width: 650px;
+  backdrop-filter: blur(6px);
+  background-color: rgba(255, 255, 255, 0.85);
+}
+    

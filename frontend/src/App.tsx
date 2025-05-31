@@ -14,28 +14,32 @@ import Puestos from './pages/Puestos';
 import RepuestosOrden from './pages/OrdenRepuestos';
 import Facturas from './pages/factura';
 import DetalleFacturas from './pages/DetalleFactura';
+import Informes from './pages/informes';
+import Bienvenida from './pages/Bienvenida';
 
 function App() {
-
   return (
     <Router>
-    <Navigation />
-    <div className="">
-      <Routes>
-        <Route path="/clientes" element={<Clientes />} />
-        <Route path="/puestos" element={<Puestos />} />
-        <Route path="/empleados" element={<Empleados />} />
-        <Route path="/vehiculos" element={<Vehiculos />} />
-        <Route path="/ordenes" element={<Ordenes />} />
-        <Route path='/detalles' element={<DetalleOrdenes />} />
-        <Route path='/repuestos/:ordenId' element={<RepuestosOrden />} />
-        <Route path="/detalles/:ordenId" element={<DetalleOrdenes />}/>{/* ✅ aquí */}
-        <Route path='/facturas' element={<Facturas />} />
-        <Route path="/detalles-factura/:facturaId" element={<DetalleFacturas />} />
-      </Routes>
-    </div>
-  </Router>
-  )
+      <Navigation />
+      <div className="container-fluid px-4 mt-4">
+        <Routes>
+          <Route path="/" element={<Bienvenida />} />
+          <Route path="/clientes" element={<Clientes />} />
+          <Route path="/puestos" element={<Puestos />} />
+          <Route path="/empleados" element={<Empleados />} />
+          <Route path="/vehiculos" element={<Vehiculos />} />
+          <Route path="/ordenes" element={<Ordenes />} />
+          <Route path='/detalles' element={<DetalleOrdenes />} />
+          <Route path='/repuestos/:ordenId' element={<RepuestosOrden />} />
+          <Route path="/detalles/:ordenId" element={<DetalleOrdenes />} />
+          <Route path='/facturas' element={<Facturas />} />
+          <Route path="/detalles-factura/:facturaId" element={<DetalleFacturas />} />
+          <Route path='/informes' element={<Informes />} />
+          
+        </Routes>
+      </div>
+    </Router>
+  );
 }
 
 export default App

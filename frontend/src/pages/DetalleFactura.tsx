@@ -15,21 +15,28 @@ interface DetalleFactura {
   descripcion?: string;
 }
 
+interface Cliente {
+  nombre: string;
+}
+
+interface VehiculoDetalle {
+  placa: string;
+  marca: string;
+  modelo: string;
+  cliente?: Cliente;
+}
+
+interface OrdenConVehiculo {
+  vehiculo?: VehiculoDetalle;
+}
+
 interface Factura {
   id: number;
   fechaEmision: string;
   descuento: number | string;
   estado: string;
   total: number | string;
-  ordenes?: {
-    vehiculo?: {
-      placa: string;
-      descripcion: string;
-      cliente?: {
-        nombre: string;
-      };
-    };
-  }[];
+  ordenes?: OrdenConVehiculo[];
 }
 
 export default function DetalleFactura() {
@@ -69,7 +76,7 @@ export default function DetalleFactura() {
 
     if (cliente) doc.text(`Cliente: ${cliente.nombre}`, 14, 53);
     if (vehiculo) {
-      doc.text(`Vehículo: ${vehiculo.descripcion}`, 14, 60);
+      doc.text(`Vehículo: ${vehiculo.marca} ${vehiculo.modelo}`, 14, 60);
       doc.text(`Placa: ${vehiculo.placa}`, 14, 67);
     }
 
@@ -89,6 +96,8 @@ export default function DetalleFactura() {
     doc.save(`factura_${factura.id}.pdf`);
   };
 
+  const vehiculo = factura?.ordenes?.[0]?.vehiculo;
+
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -105,9 +114,9 @@ export default function DetalleFactura() {
           <p><strong>Descuento:</strong> Q{Number(factura.descuento).toFixed(2)}</p>
           <p><strong>Total:</strong> Q{Number(factura.total).toFixed(2)}</p>
           <hr />
-          <p><strong>Cliente:</strong> {factura.ordenes?.[0]?.vehiculo?.cliente?.nombre}</p>
-          <p><strong>Vehículo:</strong> {factura.ordenes?.[0]?.vehiculo?.descripcion}</p>
-          <p><strong>Placa:</strong> {factura.ordenes?.[0]?.vehiculo?.placa}</p>
+          <p><strong>Cliente:</strong> {vehiculo?.cliente?.nombre ?? 'No disponible'}</p>
+          <p><strong>Vehículo:</strong> {vehiculo ? `${vehiculo.marca} ${vehiculo.modelo}` : 'No disponible'}</p>
+          <p><strong>Placa:</strong> {vehiculo?.placa ?? 'No disponible'}</p>
 
           <Button variant="warning" onClick={generarPDF}>
             Generar PDF

@@ -1,3 +1,4 @@
+/* eslint-disable no-irregular-whitespace */
 import { useEffect, useState } from 'react';
 import { api } from '../api/api';
 import { Button, Modal, Table, Form } from 'react-bootstrap';
@@ -24,7 +25,7 @@ export default function Empleados() {
     nombre: '',
     telefono: '',
     cargo: '',
-    salario: 0,
+    salario: NaN,
     puestoId: 0,
   });
 
@@ -45,11 +46,20 @@ export default function Empleados() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    const numericFields = ['salario', 'puestoId'];
-    setForm({
-      ...form,
-      [name]: numericFields.includes(name) ? Number(value) : value,
-    });
+    if (name === 'salario') {
+      if (/^(?!0\d)\d*$/.test(value) || value === '') {
+        setForm({
+          ...form,
+          salario: value === '' ? NaN : Number(value),
+        });
+      }
+    } else {
+      const numericFields = ['puestoId'];
+      setForm({
+        ...form,
+        [name]: numericFields.includes(name) ? Number(value) : value,
+      });
+    }
   };
 
   const resetForm = () => {
@@ -57,7 +67,7 @@ export default function Empleados() {
       nombre: '',
       telefono: '',
       cargo: '',
-      salario: 0,
+      salario: NaN,
       puestoId: 0,
     });
   };
@@ -145,7 +155,13 @@ export default function Empleados() {
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Salario</Form.Label>
-              <Form.Control type="number" name="salario" value={form.salario} onChange={handleChange} />
+              <Form.Control
+                type="text"
+                name="salario"
+                value={isNaN(form.salario) ? '' : String(form.salario)}
+                onChange={handleChange}
+                placeholder="Ingrese salario"
+              />
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Puesto</Form.Label>

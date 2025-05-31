@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/api';
 import { Button, Modal, Table, Form } from 'react-bootstrap';
-import { cleanData } from '../utils/cleanData';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 interface Vehiculo {
   id?: number;
@@ -13,27 +13,42 @@ interface Vehiculo {
   color: string;
 }
 
+interface Cliente {
+  id: number;
+  nombre: string;
+}
+
 export default function Vehiculos() {
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState<Vehiculo>({ placa: '', marca: '', modelo: '', anio: 2020, clienteId: 1, color: '' });
+  const [form, setForm] = useState<Vehiculo>({
+    placa: '',
+    marca: '',
+    modelo: '',
+    anio: 2020,
+    clienteId: 0,
+    color: ''
+  });
 
   const loadVehiculos = async () => {
     const res = await api.get('/vehiculos');
     setVehiculos(res.data);
   };
 
+  const loadClientes = async () => {
+    const res = await api.get('/clientes');
+    setClientes(res.data);
+  };
+
   useEffect(() => {
     loadVehiculos();
+    loadClientes();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-  
-    const parsedValue = ['anio', 'clienteId'].includes(name)
-      ? Number(value)
-      : value;
-  
+    const parsedValue = ['anio', 'clienteId'].includes(name) ? Number(value) : value;
     setForm({ ...form, [name]: parsedValue });
   };
 
@@ -41,28 +56,19 @@ export default function Vehiculos() {
     try {
       const method = form.id ? 'put' : 'post';
       const url = form.id ? `/vehiculos/${form.id}` : '/vehiculos';
-  
-      // ✅ Usamos cleanData para dejar solo los campos válidos
-      const vehiculoData = cleanData(form, [
-        'placa',
-        'marca',
-        'modelo',
-        'anio',
-        'clienteId',
-        'color',
-      ]);
-  
-      await api[method](url, vehiculoData);
-  
+      await api[method](url, form);
       setShowModal(false);
-      setForm({ placa: '', marca: '', modelo: '', anio: 2020, clienteId: 1, color: '' });
+      resetForm();
       loadVehiculos();
     } catch (error) {
       console.error('Error al guardar vehículo:', error);
-      alert('Ocurrió un error al guardar el vehículo. Intenta nuevamente.');
+      alert('Error al guardar vehículo.');
     }
   };
 
+  const resetForm = () => {
+    setForm({ placa: '', marca: '', modelo: '', anio: 2020, clienteId: 0, color: '' });
+  };
 
   const handleEdit = (vehiculo: Vehiculo) => {
     setForm(vehiculo);
@@ -70,18 +76,21 @@ export default function Vehiculos() {
   };
 
   const handleDelete = async (id: number) => {
-    await api.delete(`/vehiculos/${id}`);
-    loadVehiculos();
+    if (confirm('¿Deseas eliminar este vehículo?')) {
+      await api.delete(`/vehiculos/${id}`);
+      loadVehiculos();
+    }
   };
 
   return (
     <div className="container mt-4">
       <div className='d-flex justify-content-between align-items-center mb-3'>
-      <h2 className='m0'><i className='bi bi-car-front-fill'></i>  Vehículos</h2>
-      <Button className="mb-2" onClick={() => setShowModal(true)}>Agregar Vehículo</Button>
+        <h2><i className='bi bi-car-front-fill me-2'></i>Vehículos</h2>
+        <Button onClick={() => setShowModal(true)}>Agregar Vehículo</Button>
       </div>
-      <Table striped bordered hover className='table table-striped table-dark'>
-        <thead className="thead-light">
+
+      <Table striped bordered hover className='table table-dark'>
+        <thead>
           <tr>
             <th>ID</th>
             <th>Placa</th>
@@ -102,7 +111,7 @@ export default function Vehiculos() {
               <td>{v.modelo}</td>
               <td>{v.anio}</td>
               <td>{v.color}</td>
-              <td>{v.clienteId}</td>
+              <td>{clientes.find(c => c.id === v.clienteId)?.nombre || '—'}</td>
               <td>
                 <Button size="sm" variant="success" onClick={() => handleEdit(v)}>Editar</Button>{' '}
                 <Button size="sm" variant="danger" onClick={() => handleDelete(v.id!)}>Eliminar</Button>
@@ -118,29 +127,34 @@ export default function Vehiculos() {
         </Modal.Header>
         <Modal.Body>
           <Form>
-            <Form.Group>
+            <Form.Group className="mb-2">
               <Form.Label>Placa</Form.Label>
               <Form.Control name="placa" value={form.placa} onChange={handleChange} />
             </Form.Group>
-            <Form.Group>
+            <Form.Group className="mb-2">
               <Form.Label>Marca</Form.Label>
               <Form.Control name="marca" value={form.marca} onChange={handleChange} />
             </Form.Group>
-            <Form.Group>
+            <Form.Group className="mb-2">
               <Form.Label>Modelo</Form.Label>
               <Form.Control name="modelo" value={form.modelo} onChange={handleChange} />
             </Form.Group>
-            <Form.Group>
+            <Form.Group className="mb-2">
               <Form.Label>Año</Form.Label>
-              <Form.Control name="anio" type="number" value={form.anio} onChange={handleChange} />
+              <Form.Control type="number" name="anio" value={form.anio} onChange={handleChange} />
             </Form.Group>
-            <Form.Group>
-              <Form.Label>Cliente ID</Form.Label>
-              <Form.Control name="clienteId" type="number" value={form.clienteId} onChange={handleChange} />
+            <Form.Group className="mb-2">
+              <Form.Label>Cliente</Form.Label>
+              <Form.Select name="clienteId" value={form.clienteId} onChange={handleChange}>
+                <option value={0}>Seleccione un cliente</option>
+                {clientes.map(c => (
+                  <option key={c.id} value={c.id}>{c.nombre}</option>
+                ))}
+              </Form.Select>
             </Form.Group>
-            <Form.Group>
+            <Form.Group className="mb-2">
               <Form.Label>Color</Form.Label>
-              <Form.Control name="color"  value={form.color} onChange={handleChange} />
+              <Form.Control name="color" value={form.color} onChange={handleChange} />
             </Form.Group>
           </Form>
         </Modal.Body>

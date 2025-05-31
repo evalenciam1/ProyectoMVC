@@ -29,7 +29,7 @@ export const obtenerClientes = async (_req: Request, res: Response) => {
   try {
     const clientes = await prisma.cliente.findMany({
       include: { vehiculos: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' },
     });
 
     res.json(clientes);
