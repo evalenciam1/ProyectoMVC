@@ -5,19 +5,22 @@ import './Navbar.css';
 
 const Navigation = () => {
   return (
-    <Navbar bg="dark" variant="dark" expand="lg" sticky="top" className="custom-navbar">
-      <Container>
-        <Navbar.Brand as={Link} to="/" className="brand-title">🔧 Taller Automotriz</Navbar.Brand>
+    <Navbar bg="dark" variant="dark" expand="lg" sticky="top" className="shadow-sm py-3">
+      <Container fluid>
+        <Navbar.Brand as={Link} to="/" className="fw-bold fs-4 d-flex align-items-center">
+          <span role="img" aria-label="wrench" className="me-2">🔧</span>
+          Taller Automotriz
+        </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="ms-auto nav-links">
-            <Nav.Link as={Link} to="/clientes">Clientes</Nav.Link>
-            <Nav.Link as={Link} to="/empleados">Empleados</Nav.Link>
-            <Nav.Link as={Link} to="/puestos">Puestos</Nav.Link>
-            <Nav.Link as={Link} to="/vehiculos">Vehículos</Nav.Link>
-            <Nav.Link as={Link} to="/ordenes">Órdenes</Nav.Link>
-            <Nav.Link as={Link} to="/facturas">Facturas</Nav.Link>
-            <Nav.Link as={Link} to="/informes">Informes</Nav.Link>
+          <Nav className="ms-auto gap-3">
+            <Nav.Link as={Link} to="/clientes" className="nav-link-custom">Clientes</Nav.Link>
+            <Nav.Link as={Link} to="/empleados" className="nav-link-custom">Empleados</Nav.Link>
+            <Nav.Link as={Link} to="/puestos" className="nav-link-custom">Puestos</Nav.Link>
+            <Nav.Link as={Link} to="/vehiculos" className="nav-link-custom">Vehículos</Nav.Link>
+            <Nav.Link as={Link} to="/ordenes" className="nav-link-custom">Órdenes</Nav.Link>
+            <Nav.Link as={Link} to="/facturas" className="nav-link-custom">Facturas</Nav.Link>
+            <Nav.Link as={Link} to="/informes" className="nav-link-custom">Informes</Nav.Link>
           </Nav>
         </Navbar.Collapse>
       </Container>

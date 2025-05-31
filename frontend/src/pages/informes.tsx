@@ -1,12 +1,10 @@
 /* eslint-disable no-irregular-whitespace */
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api/api';
-import { Button, Modal, Table, Form, Col, Row } from 'react-bootstrap';
+import { Button, Form, Col, Row, Table } from 'react-bootstrap';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import Vehiculos from './Vehiculos';
-import DetalleFactura from './DetalleFactura';
+
 interface DetalleFactura {
     id: number;
     facturaId: number;
@@ -58,6 +56,7 @@ interface Servicios {
     empleado: { nombre: string } | null;
     ordenTrabajo?: { estado: string, descripcion: string } | null;
 }
+
 interface Repuestos {
     id?: number;
     ordenId: number;
@@ -66,6 +65,7 @@ interface Repuestos {
     precioUnitario: number;
     costoUnitario: number;
 }
+
 interface Vehiculo {
     id?: number;
     placa: string;
@@ -76,44 +76,32 @@ interface Vehiculo {
     color: string;
 }
 
-export default function informes() {
+export default function Informes() {
     const [ordenes, setOrdenes] = useState<Orden[]>([]);
     const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
-    const [detalleFacturas, setDetalles] = useState<DetalleFactura[]>([]);
-    const [factura, setFactura] = useState<Factura | null>(null);
     const [servicios, setServicios] = useState<Servicios[]>([]);
     const [repuestos, setRepuestos] = useState<Repuestos[]>([]);
     const [fechaInicio, setFechaInicio] = useState<string>('');
     const [fechaFin, setFechaFin] = useState<string>('');
+    const [vehiculoId, setVehiculoId] = useState<string>('');
+    const [reporteData, setReporteData] = useState<any[]>([]);
+    const [reporteTitulo, setReporteTitulo] = useState<string>('');
 
-    //Cargamos Fechas
-    const filtrarOrdenesPorFechas = () => {
-        const ordenesFiltradas = ordenes.filter((orden) => {
-            const fechaOrden = new Date(orden.fecha ?? '').toISOString().split('T')[0];
-            return (!fechaInicio || fechaOrden >= fechaInicio) &&
-                (!fechaFin || fechaOrden <= fechaFin);
-        });
-        setOrdenes(ordenesFiltradas);
-    };
-
-    //Cargamos vehiculos
     const loadVehiculos = async () => {
         const res = await api.get('/vehiculos');
         setVehiculos(res.data);
     };
-    //Cargamos Ordenes
+
     const loadOrdenes = async () => {
         const { data } = await api.get('/ordenes-trabajo');
         setOrdenes(data);
     };
 
-    //Carga de servicios realizados
     const loadServicios = async () => {
         const res = await api.get('/detalles-orden');
         setServicios(res.data);
     };
 
-    //Carga de Repuestos utilizados
     const loadRepuestos = async () => {
         const res = await api.get('/repuestos');
         setRepuestos(res.data);
@@ -124,147 +112,120 @@ export default function informes() {
         loadOrdenes();
         loadServicios();
         loadRepuestos();
-
     }, []);
 
-    //Generacion de PDF de Ordenes por Vehiculo
-    const generarPDFOrdenesVehiculo = () => {
-        if (!ordenes) return;
-
-        const pdf = new jsPDF();
-        pdf.setFontSize(18);
-        pdf.text(`Ordenes por Vehiculo`, 14, 15);
-        pdf.setFontSize(12);
-        pdf.text('Este es el detalle de Ordenes por Vehiculo', 14, 30);
-
-
-
-
-        autoTable(pdf, {
-            startY: 50,
-            head: [['ID', 'Fecha', 'Placa', 'Marca', 'Descripcion', 'Estado']],
-            body: ordenes.map((d) => [
-                d.id,
-                new Date(d.fecha).toLocaleDateString('es-ES'),
-                d.vehiculo?.placa,
-                d.vehiculo?.marca,
-                d.descripcion,
-                d.estado,
-            ]),
+    const filtrarOrdenes = () => {
+        return ordenes.filter((orden) => {
+            const fechaOrden = new Date(orden.fecha ?? '').toISOString().split('T')[0];
+            return (!fechaInicio || fechaOrden >= fechaInicio) &&
+                (!fechaFin || fechaOrden <= fechaFin) &&
+                (!vehiculoId || orden.vehiculoId.toString() === vehiculoId);
         });
-
-        pdf.save(`Ordenes por Vehiculo.pdf`);
     };
 
-    //Generacion de PDF de Ordenes
-    const generarPDFOrdenes = () => {
-        if (!ordenes) return;
-
-        const pdf = new jsPDF();
-        pdf.setFontSize(18);
-        pdf.text(`Ordenes`, 14, 15);
-        pdf.setFontSize(12);
-        pdf.text('Este es el detalle de ordenes abiertas', 14, 30);
-
-
-
-
-        autoTable(pdf, {
-            startY: 50,
-            head: [['ID', 'Fecha', 'Placa', 'Marca', 'Descripcion', 'Estado']],
-            body: ordenes.map((d) => [
-                d.id,
-                new Date(d.fecha).toLocaleDateString('es-ES'),
-                d.vehiculo?.placa,
-                d.vehiculo?.marca,
-                d.descripcion,
-                d.estado,
-            ]),
-        });
-
-        pdf.save(`Ordenes.pdf`);
+    const mostrarReporte = (titulo: string, columnas: string[], filas: any[][]) => {
+        setReporteTitulo(titulo);
+        setReporteData([columnas, ...filas]);
     };
 
-    //Generacion de PDF de Servicios
-    const generarPDFServicios = () => {
-        if (!servicios) return;
+    const generarSumaFacturacion = async () => {
+        const res = await api.get('/facturas');
+        const facturas: Factura[] = res.data;
 
-        const pdf = new jsPDF();
-        pdf.setFontSize(18);
-        pdf.text(`Servicios realizados`, 14, 15);
-        pdf.setFontSize(12);
-        pdf.text('Este es el detalle de Servicios realizados', 14, 30);
-
-
-
-
-        autoTable(pdf, {
-            startY: 50,
-            head: [['ID', 'Empleado', 'Descripcion', 'Precio Unitario', 'Cantidad', 'Costo']],
-            body: servicios.map((s) => [
-                s.id,
-                s.empleado?.nombre,
-                s.descripcion,
-                s.precioUnitario,
-                s.cantidad,
-                s.costoUnitario
-            ]),
+        const totales: { [estado: string]: number } = {};
+        facturas.forEach(f => {
+            const estado = f.estado || 'Desconocido';
+            const total = typeof f.total === 'string' ? parseFloat(f.total) : f.total;
+            totales[estado] = (totales[estado] || 0) + total;
         });
 
-        pdf.save(`Servicios.pdf`);
+        const filas = Object.entries(totales).map(([estado, total]) => [estado, total.toFixed(2)]);
+        mostrarReporte('Suma de Facturación por Estado', ['Estado', 'Total Facturado'], filas);
     };
 
-    //Generacion de PDF de Repuestos
-    const generarPDFRepuestos = () => {
-        if (!repuestos) return;
+    const generarVehiculosFrecuentes = () => {
+        const conteo: { [placa: string]: number } = {};
+        filtrarOrdenes().forEach(o => {
+            if (o.vehiculo?.placa) {
+                conteo[o.vehiculo.placa] = (conteo[o.vehiculo.placa] || 0) + 1;
+            }
+        });
+        const filas = Object.entries(conteo).map(([placa, total]) => [placa, total]);
+        mostrarReporte('Vehículos Más Atendidos', ['Placa', 'Órdenes'], filas);
+    };
+
+    const generarServiciosFrecuentes = () => {
+        const conteo: { [desc: string]: number } = {};
+        servicios.forEach(s => {
+            conteo[s.descripcion] = (conteo[s.descripcion] || 0) + s.cantidad;
+        });
+        const filas = Object.entries(conteo).map(([desc, total]) => [desc, total]);
+        mostrarReporte('Servicios Más Solicitados', ['Servicio', 'Total'], filas);
+    };
+
+    const generarRepuestosFrecuentes = () => {
+        const conteo: { [desc: string]: number } = {};
+        repuestos.forEach(r => {
+            conteo[r.descripcion] = (conteo[r.descripcion] || 0) + r.cantidad;
+        });
+        const filas = Object.entries(conteo).map(([desc, total]) => [desc, total]);
+        mostrarReporte('Repuestos Más Utilizados', ['Repuesto', 'Total'], filas);
+    };
+
+    const generarFacturacionEntreFechas = () => {
+        const facturas = filtrarOrdenes();
+        const filas = facturas.map(f => [f.id, f.descripcion, f.estado]);
+        mostrarReporte('Facturación entre Fechas', ['ID', 'Descripción', 'Estado'], filas);
+    };
+
+    const generarProductividadPorEmpleado = () => {
+        const conteo: { [empleado: string]: number } = {};
+        servicios.forEach(s => {
+            if (s.empleado?.nombre) {
+                conteo[s.empleado.nombre] = (conteo[s.empleado.nombre] || 0) + 1;
+            }
+        });
+        const filas = Object.entries(conteo).map(([empleado, total]) => [empleado, total]);
+        mostrarReporte('Productividad por Empleado', ['Empleado', 'Servicios Realizados'], filas);
+    };
+
+    const generarOrdenesPorEstado = () => {
+        const conteo: { [estado: string]: number } = {};
+        filtrarOrdenes().forEach(o => {
+            conteo[o.estado] = (conteo[o.estado] || 0) + 1;
+        });
+        const filas = Object.entries(conteo).map(([estado, total]) => [estado, total]);
+        mostrarReporte('Órdenes por Estado', ['Estado', 'Cantidad'], filas);
+    };
+
+    const generarOrdenesPorVehiculo = () => {
+        const filas = filtrarOrdenes().map(o => [o.id, o.vehiculo?.placa, o.descripcion, o.estado]);
+        mostrarReporte('Órdenes por Vehículo', ['ID', 'Placa', 'Descripción', 'Estado'], filas);
+    };
+
+    const generarPDF = () => {
+        if (reporteData.length === 0) return;
 
         const pdf = new jsPDF();
         pdf.setFontSize(18);
-        pdf.text(`Repuestos utilizados`, 14, 15);
-        pdf.setFontSize(12);
-        pdf.text('Este es el detalle de repuestos utilizados', 14, 30);
-
-
-
+        pdf.text(reporteTitulo, 14, 20);
 
         autoTable(pdf, {
-            startY: 50,
-            head: [['ID', 'Id Orden', 'Descripcion', 'Cantidad', 'Precio Unitario', 'Costo Unitario']],
-            body: repuestos.map((r) => [
-                r.id,
-                r.ordenId,
-                r.descripcion,
-                r.cantidad,
-                r.precioUnitario,
-                r.costoUnitario
-            ]),
+            startY: 30,
+            head: [reporteData[0]],
+            body: reporteData.slice(1),
         });
 
-        pdf.save(`Servicios.pdf`);
+        pdf.save(`${reporteTitulo}.pdf`);
     };
 
     return (
         <div className="container mt-4">
             <div className="d-flex justify-content-between align-items-center mb-3">
-                <h2><i className="bi bi-receipt"></i> Generacion de informes</h2>
+                <h2><i className="bi bi-receipt"></i> Generación de informes</h2>
             </div>
             <div>
-                <h3>Informes de vehiculos</h3>
-                <Form>
-                    <Form.Group>
-                        <Form.Label>Vehículo</Form.Label>
-                        <Form.Select name="vehiculoId">
-                            <option value="">Seleccione un vehículo</option>
-                            {vehiculos.map((v) => (
-                                <option key={v.id} value={v.id}>
-                                    {v.placa} - {v.marca} {v.modelo}
-                                </option>
-                            ))}
-                        </Form.Select>
-                    </Form.Group>
-                </Form>
-
-                <h3>Informes de Utilización</h3>
+                <h3>Filtros por Fecha</h3>
                 <Row className="mb-3">
                     <Col>
                         <Form.Label>Desde</Form.Label>
@@ -274,41 +235,58 @@ export default function informes() {
                         <Form.Label>Hasta</Form.Label>
                         <Form.Control type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
                     </Col>
-                    <Col className="d-flex align-items-end">
-                        <Button variant="primary" onClick={filtrarOrdenesPorFechas}>
-                            Filtrar por Fechas
-                        </Button>
+                    <Col>
+                        <Form.Label>Vehículo</Form.Label>
+                        <Form.Select value={vehiculoId} onChange={(e) => setVehiculoId(e.target.value)}>
+                            <option value="">Todos</option>
+                            {vehiculos.map(v => (
+                                <option key={v.id} value={v.id}>{v.placa} - {v.marca} {v.modelo}</option>
+                            ))}
+                        </Form.Select>
                     </Col>
+                </Row>
+
+                <h3>Generar Reportes</h3>
+                <Row className="mb-3">
+                    <Col><Button onClick={generarSumaFacturacion} className="w-100" variant="info">Suma de Facturación</Button></Col>
+                    <Col><Button onClick={generarVehiculosFrecuentes} className="w-100" variant="info">Vehículos Más Atendidos</Button></Col>
+                    <Col><Button onClick={generarServiciosFrecuentes} className="w-100" variant="info">Servicios Más Solicitados</Button></Col>
+                    <Col><Button onClick={generarRepuestosFrecuentes} className="w-100" variant="info">Repuestos Más Utilizados</Button></Col>
                 </Row>
                 <Row className="mb-3">
-                    <Col>
-                        <Button variant="warning" onClick={generarPDFOrdenesVehiculo} className="w-100">
-                            Generar PDF de Orden por Vehículos
-                        </Button>
-                    </Col>
-                    <Col>
-                        <Button variant="warning" onClick={generarPDFOrdenes} className="w-100">
-                            Generar PDF de Orden por Fechas
-                        </Button>
-                    </Col>
+                    <Col><Button onClick={generarFacturacionEntreFechas} className="w-100" variant="warning">Facturación entre Fechas</Button></Col>
+                    <Col><Button onClick={generarProductividadPorEmpleado} className="w-100" variant="warning">Productividad por Empleado</Button></Col>
+                    <Col><Button onClick={generarOrdenesPorEstado} className="w-100" variant="warning">Órdenes por Estado</Button></Col>
+                    <Col><Button onClick={generarOrdenesPorVehiculo} className="w-100" variant="warning">Órdenes por Vehículo</Button></Col>
                 </Row>
 
-                <Row>
-                    <Col>
-                        <Button variant="warning" onClick={generarPDFServicios} className="w-100">
-                            Generar PDF de Servicios
-                        </Button>
-                    </Col>
-                    <Col>
-                        <Button variant="warning" onClick={generarPDFRepuestos} className="w-100">
-                            Generar PDF de Repuestos
-                        </Button>
-                    </Col>
-                </Row>
+                {reporteData.length > 0 && (
+                    <div>
+                        <div className="d-flex justify-content-between align-items-center">
+                            <h4>{reporteTitulo}</h4>
+                            <Button onClick={generarPDF} variant="danger">Exportar PDF</Button>
+                        </div>
+                        <Table striped bordered hover className="mt-3">
+                            <thead>
+                                <tr>
+                                    {reporteData[0].map((col: string, idx: number) => (
+                                        <th key={idx}>{col}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {reporteData.slice(1).map((fila, index) => (
+                                    <tr key={index}>
+                                        {fila.map((cell: any, idx: number) => (
+                                            <td key={idx}>{cell}</td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                    </div>
+                )}
             </div>
-
         </div>
-
     );
-
 }

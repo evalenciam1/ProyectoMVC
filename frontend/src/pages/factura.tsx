@@ -10,6 +10,11 @@ interface Factura {
   estado: string;
   total: number;
   pagoId?: number | null;
+  ordenes?: {
+    vehiculo?: {
+      placa: string;
+    }
+  }[];
 }
 
 export default function FacturaPage() {
@@ -114,6 +119,7 @@ export default function FacturaPage() {
           <tr>
             <th>ID</th>
             <th>Fecha</th>
+            <th>Vehículo</th>
             <th>Total</th>
             <th>Estado</th>
             <th>Descuento</th>
@@ -125,6 +131,7 @@ export default function FacturaPage() {
             <tr key={f.id}>
               <td>{f.id}</td>
               <td>{f.fechaEmision?.split('T')[0]}</td>
+              <td>{f.ordenes?.[0]?.vehiculo?.placa || '—'}</td>
               <td>Q{Number(f.total || 0).toFixed(2)}</td>
               <td>{f.estado}</td>
               <td>Q{Number(f.descuento || 0).toFixed(2)}</td>
