@@ -1,0 +1,6 @@
+.fondo-principal {
+  background-image: url('/taller.jpg'); /* desde public */
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+}

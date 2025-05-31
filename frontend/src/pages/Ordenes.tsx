@@ -3,9 +3,12 @@ import { api } from '../api/api';
 import { Button, Modal, Table, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface Orden {
   id?: number;
+  fecha?:Date;
   vehiculoId: number;
   estado: string;
   descripcion: string;
@@ -93,6 +96,7 @@ export default function Ordenes() {
     }
   };
 
+  
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -104,6 +108,7 @@ export default function Ordenes() {
         <thead>
           <tr>
             <th>ID</th>
+            <th>Fecha</th>
             <th>Vehículo</th>
             <th>Estado</th>
             <th>Descripcion</th>
@@ -114,6 +119,7 @@ export default function Ordenes() {
           {ordenes.map(o => (
             <tr key={o.id}>
               <td>{o.id}</td>
+              <td>{new Date(o.fecha).toLocaleDateString('es-ES')}</td>
               <td>
                 {o.vehiculo
                   ? `${o.vehiculo.placa} - ${o.vehiculo.marca} ${o.vehiculo.modelo}`
@@ -140,7 +146,7 @@ export default function Ordenes() {
           ))}
         </tbody>
       </Table>
-
+      
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>{form.id ? 'Editar Orden' : 'Nueva Orden'}</Modal.Title>

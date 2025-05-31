@@ -14,7 +14,7 @@ import Puestos from './pages/Puestos';
 import RepuestosOrden from './pages/OrdenRepuestos';
 import Facturas from './pages/factura';
 import DetalleFacturas from './pages/DetalleFactura';
-import Reporteria from './pages/Reporteria';
+import Informes from './pages/informes';
 
 function App() {
 
@@ -33,7 +33,7 @@ function App() {
         <Route path="/detalles/:ordenId" element={<DetalleOrdenes />}/>{/* ✅ aquí */}
         <Route path='/facturas' element={<Facturas />} />
         <Route path="/detalles-factura/:facturaId" element={<DetalleFacturas />} />
-        <Route path="/reporteria" element={<Reporteria />} />
+        <Route path='/informes' element={<Informes />} />
       </Routes>
     </div>
   </Router>

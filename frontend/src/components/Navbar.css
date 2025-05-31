@@ -1,15 +1,25 @@
 /* src/components/Navbar.css */
+
 .custom-navbar {
-    background-color: #1a1a1a !important;
-    padding: 1rem;
-  }
-  
-  .nav-link {
-    font-weight: 500;
-    color: #ffffff !important;
-  }
-  
-  .nav-link:hover {
-    color: #001aff !important;
-  }
-  
+  font-size: 1.1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.brand-title {
+  font-size: 1.6rem;
+  font-weight: bold;
+}
+
+.nav-links .nav-link {
+  color: #ffffff !important;
+  margin: 0 10px;
+  font-weight: 500;
+  transition: background-color 0.3s, color 0.3s;
+  padding: 8px 15px;
+  border-radius: 5px;
+}
+
+.nav-links .nav-link:hover {
+  background-color: #0d6efd;
+  color: #fff !important;
+}

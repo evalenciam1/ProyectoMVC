@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/api';
 import { Button, Modal, Table, Form } from 'react-bootstrap';
-import { cleanData } from '../utils/cleanData';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface Vehiculo {
   id?: number;
@@ -11,6 +13,19 @@ interface Vehiculo {
   anio: number;
   clienteId: number;
   color: string;
+}
+
+interface Orden {
+  id?: number;
+  fecha?:Date;
+  vehiculoId: number;
+  estado: string;
+  descripcion: string;
+  vehiculo?: {
+    placa: string;
+    marca: string;
+    modelo: string;
+  };
 }
 
 export default function Vehiculos() {
@@ -29,11 +44,11 @@ export default function Vehiculos() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-  
+
     const parsedValue = ['anio', 'clienteId'].includes(name)
       ? Number(value)
       : value;
-  
+
     setForm({ ...form, [name]: parsedValue });
   };
 
@@ -41,7 +56,7 @@ export default function Vehiculos() {
     try {
       const method = form.id ? 'put' : 'post';
       const url = form.id ? `/vehiculos/${form.id}` : '/vehiculos';
-  
+
       // ✅ Usamos cleanData para dejar solo los campos válidos
       const vehiculoData = cleanData(form, [
         'placa',
@@ -51,9 +66,9 @@ export default function Vehiculos() {
         'clienteId',
         'color',
       ]);
-  
+
       await api[method](url, vehiculoData);
-  
+
       setShowModal(false);
       setForm({ placa: '', marca: '', modelo: '', anio: 2020, clienteId: 1, color: '' });
       loadVehiculos();
@@ -62,7 +77,6 @@ export default function Vehiculos() {
       alert('Ocurrió un error al guardar el vehículo. Intenta nuevamente.');
     }
   };
-
 
   const handleEdit = (vehiculo: Vehiculo) => {
     setForm(vehiculo);
@@ -77,8 +91,8 @@ export default function Vehiculos() {
   return (
     <div className="container mt-4">
       <div className='d-flex justify-content-between align-items-center mb-3'>
-      <h2 className='m0'><i className='bi bi-car-front-fill'></i>  Vehículos</h2>
-      <Button className="mb-2" onClick={() => setShowModal(true)}>Agregar Vehículo</Button>
+        <h2 className='m0'><i className='bi bi-car-front-fill'></i>  Vehículos</h2>
+        <Button className="mb-2" onClick={() => setShowModal(true)}>Agregar Vehículo</Button>
       </div>
       <Table striped bordered hover className='table table-striped table-dark'>
         <thead className="thead-light">
@@ -140,7 +154,7 @@ export default function Vehiculos() {
             </Form.Group>
             <Form.Group>
               <Form.Label>Color</Form.Label>
-              <Form.Control name="color"  value={form.color} onChange={handleChange} />
+              <Form.Control name="color" value={form.color} onChange={handleChange} />
             </Form.Group>
           </Form>
         </Modal.Body>
