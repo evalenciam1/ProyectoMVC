@@ -102,7 +102,7 @@ export default function Empleados() {
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2><i className="bi bi-person-workspace me-2"></i>Empleados</h2>
-        <Button onClick={() => setShowModal(true)}>Agregar Empleado</Button>
+        <Button onClick={() => setShowModal(true)}>Registra Ventas</Button>
       </div>
 
       <Table striped bordered hover className="table table-striped table-dark">

@@ -14,14 +14,14 @@ const Home = () => {
     <div className="welcome-background d-flex align-items-center justify-content-center text-center">
       <Container className="p-5 bg-light rounded-4 shadow welcome-content">
         <img
-          src="/src/images.png"
+          src="/src/images1.png"
           alt="Logo Taller"
           className="mb-4"
-          style={{ width: '120px', height: 'auto' }}
+          style={{ width: '280px', height: 'auto' }}
         />
-        <h1 className="fw-bold text-dark mb-3">Bienvenido al Sistema del Taller Automotriz</h1>
+        <h1 className="fw-bold text-dark mb-3">Bienvenido al Sistema de Ferreteria</h1>
         <p className="text-muted mb-4">
-          Administra clientes, vehículos, empleados, órdenes y mucho más desde un solo lugar.
+          Administracion y control de materiales de ferreteria.
         </p>
         <Button variant="warning" className="px-4 py-2 fw-bold" onClick={ingresar}>
           Ingresar al Sistema

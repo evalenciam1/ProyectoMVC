@@ -4,8 +4,8 @@ import tallerImg from '../assets/taller.jpg'; // ✅ Importa la imagen como mód
 const Home = () => {
   return (
     <div>
-      <h1>Taller Automotriz</h1>
-      <img src={tallerImg} alt="Taller Automotriz" style={{ width: '100%', maxWidth: '800px', borderRadius: '12px' }} />
+      <h1>Ferreteria</h1>
+      <img src={tallerImg} alt="Ferreteria" style={{ width: '100%', maxWidth: '800px', borderRadius: '12px' }} />
     </div>
   );
 };
